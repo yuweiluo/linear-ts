@@ -101,6 +101,7 @@ class Roful(Policy):
     def conditional_inflation(value, thin_thresh):
         def _inflation(summary):
             if summary.thinness > thin_thresh:
+                print('Thinness got too big',summary.thinness)
                 return summary.radius_det()
             else:
                 return value
@@ -208,7 +209,7 @@ class SievedGreedyWorthFunction(WorthFunction):
         if len(scale.shape) == 2:
             scale = np.diag(scale)
 
-        return self.radius() * scale ** 0.5
+        return self.radius(self.summary) * scale ** 0.5
 
     def confidence_bounds(self, arms):
         centers = self.confidence_center(arms)

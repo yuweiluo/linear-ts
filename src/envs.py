@@ -119,6 +119,48 @@ class ContextGenerator:
         pass
 
 
+class Example2ContextGenerator(ContextGenerator):
+    def __init__(self, d):
+        self.k = 3
+        self.d = d
+
+    def generate(self, t):
+        return Context(t, self._get_context())
+
+    def _get_context(self):
+        dim = int(self.d / 3)
+        x = np.zeros((self.k, self.d))
+        x[0, :dim] = -1.0 / dim ** 0.5
+        x[1, :dim] = -1.0 / dim ** 0.5
+        x[1, dim:] = +1.0 / dim ** 0.5
+        return x
+
+
+class Example1ContextGenerator(ContextGenerator):
+    def __init__(self, d, sign_var_mismatch):
+        self.d = d
+        self.sign_var_mismatch = sign_var_mismatch
+
+    def generate(self, t):
+        return Context(t, self._get_context(t))
+
+    def _get_context(self, t):
+        dim = int(self.d / 2)
+        if t <= 2*dim:
+            x = np.zeros((1, self.d))
+            x[0, t-1] = 1
+        else:
+            if t <= 3*dim:
+                x = np.zeros((2, self.d))
+                x[0, 2 * (t - 2 * dim) - 1] = 1
+                x[0, 2 * (t - 2 * dim) - 2] = 1
+            else:
+                x = np.zeros((2, self.d))
+                x[0, :] = self.sign_var_mismatch * np.ones((1, self.d)) / (dim ** 0.5)
+
+        return x
+
+
 class StochasticContextGenerator(ContextGenerator):
     def __init__(self, k, d, rand_gen):
         self.k = k
