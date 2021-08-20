@@ -1,3 +1,4 @@
+
 import abc
 
 from typing import List, Callable
@@ -76,6 +77,8 @@ class ProductWorthFunction(WorthFunction):
 
 class Roful(Policy):
     thinnesses: List[float]
+    #Yuwei
+  
     summary: DataSummary
     worth_func: WorthFunction
 
@@ -85,6 +88,7 @@ class Roful(Policy):
         self.thinnesses = []
         self.summary = DataSummary(d, prior_var)
         self.worth_func = worth_func
+        self.all_rew = 0
 
     @staticmethod
     def ts(d, prior_var, inflation=1.0, state=None):
@@ -93,6 +97,16 @@ class Roful(Policy):
 
         return Roful(d, prior_var, TsWorthFunction(inflation, state=state))
 
+    def pure_thin(d, prior_var, inflation=1.0, state=None):
+        if isinstance(inflation, float):
+            inflation = Roful.const_inflation(inflation)
+
+        return Roful(d, prior_var, PureThinnessWorthFunction(inflation, state=state))
+    def thin_dirt(d, prior_var, inflation=1.0, state=None):
+        if isinstance(inflation, float):
+            inflation = Roful.const_inflation(inflation)
+
+        return Roful(d, prior_var, ThinnessDirectedWorthFunction(inflation, state=state))
     @staticmethod
     def const_inflation(value):
         return lambda *args: value
@@ -101,12 +115,19 @@ class Roful(Policy):
     def conditional_inflation(value, thin_thresh):
         def _inflation(summary):
             if summary.thinness > thin_thresh:
-                print('Thinness got too big',summary.thinness)
                 return summary.radius_det()
             else:
                 return value
 
         return _inflation
+
+###########Yuwei##########################
+    def dynamic_inflation():
+        def _inflation(summary):
+          return summary.thinness
+
+        return _inflation
+###########Yuwei##########################
 
     @staticmethod
     def radius_inflation(delta=1e-4):
@@ -129,7 +150,7 @@ class Roful(Policy):
         return self.summary.d
 
     def choose_arm(self, ctx: Context) -> int:
-        self.worth_func.bind(self.summary)
+        self.worth_func.bind(self.summary) ##mark
         values = self.worth_func.compute(ctx)
         return np.argmax(values).item()
 
@@ -143,7 +164,111 @@ class Roful(Policy):
         super().update_metrics(feedback)
 
         self.thinnesses.append(self.summary.thinness)
+        #self.all_rew = feedback.all_rew
 
+class ThinnessDirectedWorthFunction(ProductWorthFunction):
+    compensator: np.ndarray
+
+    def __init__(self, inflation, state=npr):
+        self.inflation = inflation
+        self.state = state
+
+    @property
+    def d(self):
+        return self.summary.d
+
+    def update(self):
+        d = self.d
+        rand = self.state.randn(d,15)
+        #print(rand.shape)
+
+        basis = self.summary.basis
+        scale = self.summary.scale
+        #print(basis.shape)
+        #print(scale.shape)
+
+        #print((1/scale[np.newaxis,:]).shape)
+        #print((1/scale ** 0.5 @rand  ).shape)
+        self.compensator = (
+            #self.inflation(self.summary) * basis.T @ (rand / scale ** 0.5)
+            basis.T @ ( np.multiply(1/scale[:, np.newaxis] ** 0.5, rand)  )
+        )
+
+        #self.all_rew = self.summary.all_rew
+    def compute(self, ctx: Context) -> np.ndarray:
+      
+        values = ctx.arms@ self.candidates()
+        #print(values.shape)
+        #print("lol")
+        regret = values.max(axis=0, keepdims=True) - values
+        regret = np.mean(regret, axis = 1)
+        #print(regret.shape)
+        svd_list = [npl.svd( self.summary.xx+ np.outer(arm, arm) , hermitian=True)for arm in ctx.arms]
+        thinness_list = np.array([(max(1/svd_[1]) * self.d / sum(1/svd_[1])) ** 0.5 for svd_ in svd_list])
+        thinness_list_delta = self.summary.thinness - thinness_list 
+        #print(self.summary.thinness)
+        #svdd = npl.svd( self.summary.xx)
+        #print((max(1/svdd[1]) * self.d / sum(1/svdd[1])) ** 0.5)
+        #print(thinness_list_delta)
+        #values = -(regret**2) * thinness_list
+        values = -(regret**2) * (1+ np.exp( - thinness_list_delta))
+        #print(values)
+        #values = np.minimum(values, np.zeros_like(values))
+        #print(values)
+        #values = np.array(values)
+       # print(values.shape)
+        #print(values.ndim)
+        
+      
+        if values.ndim == 2:
+            values = np.max(values, axis=1)
+
+        return values
+
+    def candidates(self):
+        return self.summary.mean[:, np.newaxis] + self.compensator       
+
+class PureThinnessWorthFunction(ProductWorthFunction):
+    compensator: np.ndarray
+
+    def __init__(self, inflation, state=npr):
+        self.inflation = inflation
+        self.state = state
+
+    @property
+    def d(self):
+        return self.summary.d
+
+    def update(self):
+        d = self.d
+        rand = self.state.randn(d)
+
+        basis = self.summary.basis
+        scale = self.summary.scale
+
+        self.compensator = (
+            #self.inflation(self.summary) * basis.T @ (rand / scale ** 0.5)
+            basis.T @ (rand / scale ** 0.5)
+        )
+
+        #self.all_rew = self.summary.all_rew
+    def compute(self, ctx: Context) -> np.ndarray:
+      
+        #values = ctx.arms @ self.candidates()
+        svd_list = [npl.svd( self.summary.xx+ np.outer(arm, arm) , hermitian=True)for arm in ctx.arms]
+        thinness_list = [(max(1/svd_[1]) * self.d / sum(1/svd_[1])) ** 0.5 for svd_ in svd_list]
+        values = [1/thinness_ for thinness_ in thinness_list] 
+        values = np.array(values)
+        #print(values.shape)
+        
+      
+        if values.ndim == 2:
+            values = np.max(values, axis=1)
+
+        return values
+
+    def candidates(self):
+        return self.summary.mean + self.compensator
 
 class TsWorthFunction(ProductWorthFunction):
     compensator: np.ndarray
@@ -209,7 +334,7 @@ class SievedGreedyWorthFunction(WorthFunction):
         if len(scale.shape) == 2:
             scale = np.diag(scale)
 
-        return self.radius(self.summary) * scale ** 0.5
+        return self.radius() * scale ** 0.5
 
     def confidence_bounds(self, arms):
         centers = self.confidence_center(arms)

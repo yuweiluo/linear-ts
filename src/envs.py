@@ -47,7 +47,7 @@ class Environment:
         noise = self.noise_gen.generate(ctx, arm_idx)
         max_rew = mean.max()
 
-        return Feedback(ctx, arm_idx, mean[arm_idx], noise, max_rew)
+        return Feedback(ctx, arm_idx, mean[arm_idx], noise, max_rew )
 
 
 class Context:
@@ -119,6 +119,30 @@ class ContextGenerator:
         pass
 
 
+class StochasticContextGenerator(ContextGenerator):
+    def __init__(self, k, d, rand_gen):
+        self.k = k
+        self.d = d
+        self.rand_gen = rand_gen
+
+    def generate(self, t):
+        return Context(t, self.rand_gen())
+
+    @staticmethod
+    def uniform_entries(k, d, bound, state=npr):
+        def _rand():
+            return state.uniform(-bound, bound, (k, d))
+
+        return StochasticContextGenerator(k, d, _rand)
+
+    @staticmethod
+    def uniform_on_sphere(k, d, radius, state=npr):
+        def _rand():
+            array = state.randn(k, d)
+            return radius * array / npl.norm(array, ord=2, axis=0, keepdims=True)
+
+        return StochasticContextGenerator(k, d, _rand)
+
 class Example2ContextGenerator(ContextGenerator):
     def __init__(self, d):
         self.k = 3
@@ -159,28 +183,3 @@ class Example1ContextGenerator(ContextGenerator):
                 x[0, :] = self.sign_var_mismatch * np.ones((1, self.d)) / (dim ** 0.5)
 
         return x
-
-
-class StochasticContextGenerator(ContextGenerator):
-    def __init__(self, k, d, rand_gen):
-        self.k = k
-        self.d = d
-        self.rand_gen = rand_gen
-
-    def generate(self, t):
-        return Context(t, self.rand_gen())
-
-    @staticmethod
-    def uniform_entries(k, d, bound, state=npr):
-        def _rand():
-            return state.uniform(-bound, bound, (k, d))
-
-        return StochasticContextGenerator(k, d, _rand)
-
-    @staticmethod
-    def uniform_on_sphere(k, d, radius, state=npr):
-        def _rand():
-            array = state.randn(k, d)
-            return radius * array / npl.norm(array, ord=2, axis=0, keepdims=True)
-
-        return StochasticContextGenerator(k, d, _rand)

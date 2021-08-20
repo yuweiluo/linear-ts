@@ -81,15 +81,6 @@ class DataSummary:
 
         return term1 ** 0.5 + term2 ** 0.5
 
-  #  def oful_radius(self, d, sd):
-  #      term1 = ((d * np.log(1 + (l * l * env.t / (d * sd * sd))) + 7 * np.log(1 + env.t)) ** 0.5
-  #      term2 = self.param_bound + (7 * np.log(1 + env.t)) ** 0.5
-
-        #term1 = np.log(self.scale / self.lambda_).sum() - 2 * np.log(delta)
-        #term2 = self.lambda_ * self.param_bound ** 2
-
-   #     return term1 + term2
-
 
 class MetricAggregator:
     def __init__(self):
