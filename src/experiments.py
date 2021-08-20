@@ -260,7 +260,7 @@ def run_experiments(n, d, k, t, s, prior_mu=0.0, prior_sd=10.0, noise_sd=1.0,
         plt.legend()
         plt.savefig(f"plots/{name}-{n}-{d}-{k}-{t}-{sim}-{prior_mu}-{prior_sd}-{noise_sd}-{thin_thresh}-{const_infl}.pdf")
         output.to_csv(f"plots/{name}-{n}-{d}-{k}-{t}-{sim}-{prior_mu}-{prior_sd}-{noise_sd}-{thin_thresh}-{const_infl}.csv", index=False)
-        plt.show()
+        #plt.show()
 
 
 def __main__():
