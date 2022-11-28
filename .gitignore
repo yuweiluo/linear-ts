@@ -127,3 +127,9 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+
+# My configurations:
+/figures
+/history outputs
+/results
+/my_outputs
