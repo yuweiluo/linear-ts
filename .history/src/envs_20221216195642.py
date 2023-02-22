@@ -7,7 +7,6 @@ import numpy.linalg as npl
 import numpy.random as npr
 
 
-
 class Environment:
     t: int
     param: np.ndarray  # system parameter

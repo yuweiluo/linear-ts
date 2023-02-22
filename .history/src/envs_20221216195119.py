@@ -7,7 +7,6 @@ import numpy.linalg as npl
 import numpy.random as npr
 
 
-
 class Environment:
     t: int
     param: np.ndarray  # system parameter
@@ -60,6 +59,8 @@ class Context:
         self.t = t
         self.arms = arms
 
+# add two numbers 
+def 
 
 class Feedback:
     ctx: Context
