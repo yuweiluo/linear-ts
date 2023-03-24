@@ -134,7 +134,7 @@ def example1_scenario(
 
 
     algs = {
-        "TS-MA": Roful.spects(d, prior_var=prior_var, state=state_factory(), inflation=1.0, param=param, noise_sd = noise_sd, t = t, radius = radius, delta = 1e-4, alpha =alpha, radius_oful=radius_SG ),
+        "TS-AO": Roful.spects(d, prior_var=prior_var, state=state_factory(), inflation=1.0, param=param, noise_sd = noise_sd, t = t, radius = radius, delta = 1e-4, alpha =alpha, radius_oful=radius_SG ),
         "TS": Roful.ts(d, prior_var=prior_var, state=state_factory(), inflation=1.0, param=param, noise_sd = noise_sd, t = t, radius = radius, delta = 1e-4 ),
         "TS-Freq": Roful.ts(
             d,
@@ -144,14 +144,6 @@ def example1_scenario(
             param=param, noise_sd = noise_sd, t = t, radius = radius, delta = 1e-4
         ),
         'OFUL': Roful.oful(d, alpha=prior_var, radius_SG=radius_SG, param=param, noise_sd = noise_sd, t = t, radius = radius, delta = 1e-4 ),
-        "TS-Improved": Roful.ts(
-            d,
-            prior_var=prior_var,
-            state=state_factory(),
-            inflation=Roful.conditional_inflation(
-                const_infl, thin_thresh=thin_thresh),
-                param=param, noise_sd = noise_sd, t = t, radius = radius, delta = 1e-4
-        ),
     }
 
     if k == np.inf: 

@@ -379,6 +379,9 @@ class Roful(Policy):
         lambda_max = np.max(scale)
         lambda_min = np.min(scale)
 
+        # print(f'XX_norm_sqr_max = {XX_norm_sqr_max}, scale = {scale}')
+        
+
         lambda_up = np.min(scale[scale>=XX_norm_sqr_max])
         lambda_down = np.max(scale[scale<=XX_norm_sqr_max])
         #print(f"lambda_up = {lambda_up}, lambda_down = {lambda_down}, lambda_max = {lambda_max}, lambda_min = {lambda_min}")
@@ -422,6 +425,9 @@ class Roful(Policy):
     
         # x:where to evaluate the integral
         # return: discrete integral of empirical distribution
+        #print(f"  support = {support} ")
+        #print(f" weight = {weight}")
+        
 
         return np.sum(func(support) @ weight)
 
@@ -472,7 +478,7 @@ class GradientDirectedWorthFunction(ProductWorthFunction):
 
 
         # print(values.shape)
-
+        # print("lol")
         regret = values.max(axis=0, keepdims=True) - values
         regret = np.mean(regret, axis=1)
 
@@ -539,7 +545,7 @@ class ThinnessDirectedWorthFunction(ProductWorthFunction):
 
         values = ctx.arms @ self.candidates()
         # print(values.shape)
-
+        # print("lol")
         regret = values.max(axis=0, keepdims=True) - values
         regret = np.mean(regret, axis=1)
         # print(regret.shape)
@@ -654,6 +660,13 @@ class TsWorthFunction(ProductWorthFunction):
 
     def principle_candidates(self):
         return self.summary.mean + self.principle_compensator
+
+
+
+
+
+
+
 
 
 

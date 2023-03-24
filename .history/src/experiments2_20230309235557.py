@@ -25,6 +25,7 @@ if 'plotting' in sys.modules:
 
 
 
+
 def run_experiments_d(
     n, d_min, d_max, d_gap, k, t, s, prior_mu=0.0, prior_sd=10.0, noise_sd=1.0,
     thin_thresh=2.0,
@@ -41,7 +42,7 @@ def run_experiments_d(
     #k_list = np.array([1, 3, 10, 50, 100])
     #k_list = np.array([1,10,100])
     #k_list = np.array([0])
-    k_list = np.array([10])
+    k_list = np.array([1,3,10,100])
     #k_list = np.array([np.inf])
 
     outputs = []
@@ -57,7 +58,7 @@ def run_experiments_d(
 
         t = np.int64(np.ceil(d/gamma))  # mark
 
-        predicted_risk_ = predicted_risk(gamma, radius, noise_sd)
+        # predicted_risk_ = predicted_risk(gamma, radius, noise_sd)
 
         for k in k_list:
 
@@ -100,15 +101,15 @@ def run_experiments_d(
                         const_infl=const_infl,
                         radius = radius,
                         alpha = alpha)
-                elif sim ==2:  
-                    print('Run Example 2')
-                    results = example2_scenario(
-                        d=d, k=k, t=t, state_factory=state_factory,
+                elif sim ==2:  # grouped actions
+                    print('run_single_experiment_group')
+                    results = run_single_experiment(
+                        d=50, k=10, t=t, l = 1, state_factory=state_factory,
                         prior_var=prior_sd **2 ,
                         noise_sd=noise_sd,
                         thin_thresh=thin_thresh,
                         const_infl=const_infl,
-                        radius = radius,
+                        g= 1,
                         alpha = alpha)
                 elif sim ==3:  # non-grouped actions
                     print('run_single_experiment')
@@ -120,22 +121,22 @@ def run_experiments_d(
                         const_infl=const_infl,
                         g= 0,
                         alpha = alpha)
-                elif sim ==4:  # grouped actions
-                    print('run_single_experiment_group')
-                    results = run_single_experiment(
-                        d=50, k=10, t=t, l = 1, state_factory=state_factory,
-                        prior_var=prior_sd **2 ,
-                        noise_sd=noise_sd,
-                        thin_thresh=thin_thresh,
-                        const_infl=const_infl,
-                        g= 1,
-                        alpha = alpha)
                 elif sim ==0:  # Run Russo Scenario
                         print('Run Russo Scenario')
                         results = russo_scenario(
                             d=d, k=k, t=t, state_factory=state_factory,
                             prior_var=prior_sd ** 2,
                             prior_mu=prior_mu,
+                            noise_sd=noise_sd,
+                            thin_thresh=thin_thresh,
+                            const_infl=const_infl,
+                            radius = radius,
+                            alpha = alpha)
+                elif sim ==4:  
+                        print('Run Example 2')
+                        results = example2_scenario(
+                            d=d, k=k, t=t, state_factory=state_factory,
+                            prior_var=prior_sd **2 ,
                             noise_sd=noise_sd,
                             thin_thresh=thin_thresh,
                             const_infl=const_infl,
@@ -264,8 +265,7 @@ def run_experiments_d(
     outputs_last.to_csv(f"{output_folder_name}/all-last-{output_name}.csv", index=False)
 
 
-# plot statistics for multiple k in one figure
-'''
+
     for name, metric in metrics.items():
         plt.clf()
         for alg, agg in metric.items():
@@ -299,13 +299,12 @@ def run_experiments_d(
 
 
             
-    plot curves of each k together 
-    plot_statistics(output_folder_name, output_name, figure_folder_name, mode = 'd', gamma = gamma)
 
+    plot_statistics(output_folder_name, output_name, figure_folder_name, mode = 'd', gamma = gamma)
     outputs.to_csv(f"{figure_folder_name}/all-{output_name}.csv", index=False)
     outputs_last.to_csv(f"{figure_folder_name}/all-last-{output_name}.csv", index=False)
 
-'''
+
 
 
 
@@ -321,10 +320,15 @@ def __main__():
     parser.add_argument("-s", type=np.int64, help="random seed", default=1)
     parser.add_argument("-pm", type=np.float64, help="prior mu", default=0.0)
     parser.add_argument("-psd", type=np.float64, help="prior standard deviation", default=1.0)
+
     parser.add_argument("-nsd", type=np.float64, help="noise standard deviation", default=1.0)
+
     parser.add_argument("-th", type=np.float64, help="threshold for thinness based inflation", default=2.0)
+
     parser.add_argument("-inf", type=np.float64, help="inflation used when large thinness", default=5.0)
+
     parser.add_argument("-sim", type=np.int64, help="0: russo scenario, 1: example 1, 2: example 2", default=0)
+
     parser.add_argument("-gamma", type=np.float64, help="ratio", default=0.1)
     parser.add_argument("-mode", type=str, help="mode", default="d")
     parser.add_argument("-radius", type=np.float64, help="norm of beta", default=1.0)
@@ -358,5 +362,3 @@ if __name__ == "__main__":
 ## Mar 9 2023
 ##  PYTHONPATH=src python -m experiments2 -sim 4 -k 0 -para_min 30 -para_max 30 -para_gap 10 -pm 0 -nsd 1 -n 30 -mode "d" -gamma 0.1 -psd 10 -radius 1 -s 1
 ##  PYTHONPATH=src python -m experiments2 -sim 0 -k 100 -para_min 10 -para_max 10 -para_gap 10 -pm 0 -nsd 1 -n 20 -mode "d" -gamma 0.002 -psd 10 -radius 10 -s 1
-## PYTHONPATH=src python -m experiments2 -sim 2 -k 0 -para_min 30 -para_max 30 -para_gap 10 -pm 0 -nsd 1 -n 20 -mode "d" -gamma 0.01 -psd 10 -radius 10 -s 1
-## PYTHONPATH=src python -m experiments2 -sim 1 -k 10 -para_min 90 -para_max 90 -para_gap 10 -pm 0 -nsd 2 -n 20 -mode "d" -gamma 0.1 -psd 1 -radius 10 -s 1

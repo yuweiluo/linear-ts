@@ -23,6 +23,9 @@ if 'plotting' in sys.modules:
     del sys.modules["plotting"]
 
 
+
+
+
 def run_experiments_d(
     n, d_min, d_max, d_gap, k, t, s, prior_mu=0.0, prior_sd=10.0, noise_sd=1.0,
     thin_thresh=2.0,
@@ -528,4 +531,3 @@ if __name__ == "__main__":
 
 ## Mar 9 2023
 ##  PYTHONPATH=src python -m experiments2 -sim 4 -k 0 -para_min 30 -para_max 30 -para_gap 10 -pm 0 -nsd 1 -n 30 -mode "d" -gamma 0.1 -psd 10 -radius 1 -s 1
-##  PYTHONPATH=src python -m experiments2 -sim 0 -k 0 -para_min 10 -para_max 10 -para_gap 10 -pm 0 -nsd 1 -n 20 -mode "d" -gamma 0.002 -psd 10 -radius 1 -s 1

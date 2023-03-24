@@ -311,7 +311,40 @@ class Roful(Policy):
 
 
         if self.tt == self.t:
+            #print(f"basis = {self.summary.basis}")
+            #print(f"scale = {self.summary.scale}, weight_G = {np.around(weight_G,decimals=2)}, sum = {np.sum(weight_G)}")
+            #print(f"thinness = {self.summary.thinness}")
+            #print(f"xx = {self.summary.xx}, param = {self.param}")
+            #print(f"alpha = {alpha}, beta = {beta}, zeta = {zeta}, lambda_max = {lambda_max}, lambda_min = {lambda_min}, lambda_max/lambda_min = {lambda_max/lambda_min}")
+            #print(f"theta_norm_lower_bound = {zeta/theta_norm_lower_bound}, theta_norm_upper_bound = {zeta/(npl.norm(self.theta_hat) + beta/np.sqrt(lambda_min))}")
+            #print(f"opt_XX_inv_norm = {opt_XX_inv_norm}, x_XXinvnorm_min = {self.x_XXinvnorm_min}, x_XXinvnorm_hat = {np.sqrt(theta_hat.T @ xx_inv @ theta_hat/ npl.norm(theta_hat)**2)}")
+            #print(f"opt_XX_norm! = {np.sqrt(theta_opt.T @ self.summary.xx @ theta_opt/ npl.norm(theta_opt)**2)}, self.x_XXnorm_min= {self.x_XXnorm_min}, self.x_XXnorm_max = {self.x_XXnorm_max},1/opt_XX_inv_norm = {1/opt_XX_inv_norm} ")
+            #print(f"weights = {opt_weight},opt_XX_norm! = {np.sqrt(theta_opt.T @ self.summary.xx @ theta_opt/ npl.norm(theta_opt)**2)}, opt_XX_inv_norm! = {np.sqrt(theta_opt.T @ xx_inv @ theta_opt/ npl.norm(theta_opt)**2)} ")
 
+            #print(f"1/sqrt_scale = {1/np.sqrt(self.summary.scale)}")
+            #print(f"sqrt_scale = {np.sqrt(self.summary.scale)}")
+            #print(f"lambda_max = {lambda_max}, lambda_min = {lambda_min}, self.x_XXnorm_min**2 = {self.x_XXnorm_min**2}")
+            #print(f"opt_new = {opt_new}, wst_new = {wst_new}, opt_XX_inv_norm**2 = {opt_XX_inv_norm**2}, self.x_XXinvnorm_min**2 = {self.x_XXinvnorm_min**2}")
+
+            #print(f"beta_sqr = {beta**2}, zeta_square = {zeta_square}, ")
+            #print(f"npl.norm(theta_hat)**2 = {npl.norm(theta_hat)**2},   (beta/np.sqrt(lambda_min))**2 = {(beta/np.sqrt(lambda_min))**2 }, (beta/np.sqrt(lambda_max))**2 = {(beta/np.sqrt(lambda_max))**2 }")
+            #print(f"npl.norm(theta_hat) = {npl.norm(theta_hat)} ,  beta/np.sqrt(lambda_max) = {beta/np.sqrt(lambda_max)}, beta/np.sqrt(lambda_min) = {beta/np.sqrt(lambda_min)}")
+            #print(f"normalized_weight_theta_hat**2 = {np.sum(normalized_weight_theta_hat**2)}, thetahat =  {weight_theta_hat  @  self.summary.basis   },thetahat_true = {theta_hat} ")
+            #print(f"xhat_t_Vtnorm = {np.sqrt(zeta1)/npl.norm(theta_hat)}, lambda_max_sqrt = {np.sqrt(lambda_max)}, lambda_min_sqrt = {np.sqrt(lambda_min)}, lambda_max/lambda_min = {lambda_max/lambda_min}")
+            #print(f"weight_theta_hat_upper = {weight_theta_hat_upper}, weight_theta_hat = {weight_theta_hat}")
+            
+            #print(f"1/self.summary.scale = {1/self.summary.scale**0.5}, d = {(weight_diff@ self.summary.basis ).T @ self.summary.xx @ (weight_diff @self.summary.basis) /beta**2}")
+            #print(f"weight_diff  = {weight_diff*self.summary.scale**0.5}, beta = {beta}")
+            #print(f"{npl.norm(weight_theta_hat)}, {npl.norm(theta_hat)}")
+            #np.array(self.summary.basis)@np.array(theta_hat) @  self.summary.basis 
+            #weight_theta_hat =  ( np.array(self.summary.basis)@np.array(theta_hat))**2 / npl.norm(theta_hat)**2 
+
+
+            #print(f"lambda_min = {lambda_min},  lambda_2 = {self.summary.scale[1]} ,x_XXnorm_hat**2 = {theta_hat.T @ self.summary.xx @ theta_hat/ npl.norm(theta_hat)**2}, lambda_max = {lambda_max} ")
+            # print(f"self.x_XXnorm_min**2 = {self.x_XXnorm_min** 2},  self.x_XXnorm_max_new**2 = {self.x_XXnorm_max_new**2}")
+            #print(f"opt_new = {opt_new}, wst_new = {wst_new}, opt_old = {opt_old}, wst_old = {wst_old},x_XXinvnorm_hat**2 = {theta_hat.T @ xx_inv @ theta_hat/ npl.norm(theta_hat)**2}")
+            # print(f"ratio = {wst_new/opt_new}, ratio_tri = {lambda_min/lambda_max} ,opt_new = {opt_new}, 1/lambda_min = {1/lambda_min}, wst_new = {wst_new},1/lambda_max = {1/lambda_max}")
+            # print(f"{theta_norm_upper_bound},{theta_norm_upper_bound_new},{theta_norm_upper_bound_new_new}, {theta_norm_upper_bound_new_new_new},{theta_norm_upper_bound_cheat}")
             print(f"bad ratio = {self.bad/self.tt}")
 
 
@@ -344,8 +377,20 @@ class Roful(Policy):
         self.V_n.append(V_[0])
         self.R_n.append((B_[0] + V_[0]))
         '''
+        
+        #predicted_risk_ = [0,0,0]
+        #predicted_risk_ = predicted_risk(gamma, self.radius ,self.noise_sd)
+        #self.B_n.append(predicted_risk_[0])
+        #self.V_n.append(predicted_risk_[1])
+        #self.R_n.append(predicted_risk_[2])
+        
+
+        #print(f"t = {self.t}, B_n = {B_[0]}, V_n = {V_[0]}, R_n = {B_[0] + V_[0]}")
 
 
+        
+
+        # self.outputs = ( self.metrics.regrets, self.thinnesses, self.errors, self.lambda_max, self.lambda_min, self.lambda_second, self.lambda_third,self.B_n, self.V_n, self.R_n, self.lambda_d_minus_1, self.lambda_half_d,  self.proj_first, self.errors_candidate, self.errors_pcandidate)
 
         ## append the results to the list
         self.thinnesses.append(self.summary.thinness)
@@ -365,7 +410,6 @@ class Roful(Policy):
         self.betas.append(beta)
         self.zeta.append(zeta)
         self.proj_first.append(theta_hat.T @ self.summary.xx @ theta_hat/lambda_max/npl.norm(theta_hat)**2)
-        self.approx_alpha.append(self.calculate_alpha)
 
 
         self.outputs = ( self.oracle_regrets, self.metrics.regrets, self.thinnesses, self.errors, self.lambda_max, self.lambda_min, self.lambda_max_over_min, self.proj_first, self.worst_alpha,self.approx_alpha, self.betas, self.zeta)
@@ -378,6 +422,9 @@ class Roful(Policy):
     def new_bound (scale, XX_norm_sqr_min, XX_norm_sqr_max):
         lambda_max = np.max(scale)
         lambda_min = np.min(scale)
+
+        # print(f'XX_norm_sqr_max = {XX_norm_sqr_max}, scale = {scale}')
+        
 
         lambda_up = np.min(scale[scale>=XX_norm_sqr_max])
         lambda_down = np.max(scale[scale<=XX_norm_sqr_max])
@@ -422,6 +469,9 @@ class Roful(Policy):
     
         # x:where to evaluate the integral
         # return: discrete integral of empirical distribution
+        #print(f"  support = {support} ")
+        #print(f" weight = {weight}")
+        
 
         return np.sum(func(support) @ weight)
 
@@ -472,7 +522,7 @@ class GradientDirectedWorthFunction(ProductWorthFunction):
 
 
         # print(values.shape)
-
+        # print("lol")
         regret = values.max(axis=0, keepdims=True) - values
         regret = np.mean(regret, axis=1)
 
@@ -539,7 +589,7 @@ class ThinnessDirectedWorthFunction(ProductWorthFunction):
 
         values = ctx.arms @ self.candidates()
         # print(values.shape)
-
+        # print("lol")
         regret = values.max(axis=0, keepdims=True) - values
         regret = np.mean(regret, axis=1)
         # print(regret.shape)
@@ -654,6 +704,13 @@ class TsWorthFunction(ProductWorthFunction):
 
     def principle_candidates(self):
         return self.summary.mean + self.principle_compensator
+
+
+
+
+
+
+
 
 
 

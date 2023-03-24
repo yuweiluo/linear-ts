@@ -23,6 +23,9 @@ if 'plotting' in sys.modules:
     del sys.modules["plotting"]
 
 
+
+
+
 def run_experiments_d(
     n, d_min, d_max, d_gap, k, t, s, prior_mu=0.0, prior_sd=10.0, noise_sd=1.0,
     thin_thresh=2.0,

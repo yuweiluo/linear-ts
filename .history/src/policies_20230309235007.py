@@ -315,36 +315,6 @@ class Roful(Policy):
             print(f"bad ratio = {self.bad/self.tt}")
 
 
-        '''
-        scale_ = self.summary.scale/ self.tt
-        
-        
-        def func(x):
-            #print(f"  gamma = {gamma}, ")
-            func_ = lambda y:  self.func0(y,x, gamma)
-            #print(f"c0 = {x}")
-            return 1-1/gamma -  self.discrete_integral(func_,  weight_H, scale_)
-
-        c_0 = fsolve(func, 1e-3)
-
-        func_ = lambda y:  self.func0(y,c_0, gamma)
-        #print(f"t = {self.t}, tt = {self.tt}, gamma = {gamma}, c_0 = {c_0}, obj_value = {1-1/gamma -  self.discrete_integral(func_,  weight_H, scale_)}")
-
-        func1_ = lambda x:  self.func1(x,c_0, gamma)
-        func2_ = lambda x:  self.func2(x,c_0, gamma)
-        
-        int_H_1 = self.discrete_integral(func1_, weight_H, scale_)
-        int_H_2 = self.discrete_integral(func2_, weight_H, scale_)
-        int_G_1 = self.discrete_integral(func1_, weight_G, scale_)
-
-        B_ = npl.norm(self.param)**2 * (1+ gamma * c_0 *int_H_2/ int_H_1 ) * int_G_1
-        V_ = self.noise_sd**2  * gamma * c_0 *int_H_2/ int_H_1 
-
-        self.B_n.append(B_[0])
-        self.V_n.append(V_[0])
-        self.R_n.append((B_[0] + V_[0]))
-        '''
-
 
 
         ## append the results to the list
@@ -378,6 +348,9 @@ class Roful(Policy):
     def new_bound (scale, XX_norm_sqr_min, XX_norm_sqr_max):
         lambda_max = np.max(scale)
         lambda_min = np.min(scale)
+
+        # print(f'XX_norm_sqr_max = {XX_norm_sqr_max}, scale = {scale}')
+        
 
         lambda_up = np.min(scale[scale>=XX_norm_sqr_max])
         lambda_down = np.max(scale[scale<=XX_norm_sqr_max])
@@ -422,6 +395,9 @@ class Roful(Policy):
     
         # x:where to evaluate the integral
         # return: discrete integral of empirical distribution
+        #print(f"  support = {support} ")
+        #print(f" weight = {weight}")
+        
 
         return np.sum(func(support) @ weight)
 
@@ -472,7 +448,7 @@ class GradientDirectedWorthFunction(ProductWorthFunction):
 
 
         # print(values.shape)
-
+        # print("lol")
         regret = values.max(axis=0, keepdims=True) - values
         regret = np.mean(regret, axis=1)
 
@@ -539,7 +515,7 @@ class ThinnessDirectedWorthFunction(ProductWorthFunction):
 
         values = ctx.arms @ self.candidates()
         # print(values.shape)
-
+        # print("lol")
         regret = values.max(axis=0, keepdims=True) - values
         regret = np.mean(regret, axis=1)
         # print(regret.shape)
@@ -654,6 +630,13 @@ class TsWorthFunction(ProductWorthFunction):
 
     def principle_candidates(self):
         return self.summary.mean + self.principle_compensator
+
+
+
+
+
+
+
 
 
 

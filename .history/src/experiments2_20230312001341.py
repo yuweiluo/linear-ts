@@ -25,6 +25,7 @@ if 'plotting' in sys.modules:
 
 
 
+
 def run_experiments_d(
     n, d_min, d_max, d_gap, k, t, s, prior_mu=0.0, prior_sd=10.0, noise_sd=1.0,
     thin_thresh=2.0,
@@ -41,7 +42,7 @@ def run_experiments_d(
     #k_list = np.array([1, 3, 10, 50, 100])
     #k_list = np.array([1,10,100])
     #k_list = np.array([0])
-    k_list = np.array([10])
+    k_list = np.array([100])
     #k_list = np.array([np.inf])
 
     outputs = []
@@ -321,10 +322,15 @@ def __main__():
     parser.add_argument("-s", type=np.int64, help="random seed", default=1)
     parser.add_argument("-pm", type=np.float64, help="prior mu", default=0.0)
     parser.add_argument("-psd", type=np.float64, help="prior standard deviation", default=1.0)
+
     parser.add_argument("-nsd", type=np.float64, help="noise standard deviation", default=1.0)
+
     parser.add_argument("-th", type=np.float64, help="threshold for thinness based inflation", default=2.0)
+
     parser.add_argument("-inf", type=np.float64, help="inflation used when large thinness", default=5.0)
+
     parser.add_argument("-sim", type=np.int64, help="0: russo scenario, 1: example 1, 2: example 2", default=0)
+
     parser.add_argument("-gamma", type=np.float64, help="ratio", default=0.1)
     parser.add_argument("-mode", type=str, help="mode", default="d")
     parser.add_argument("-radius", type=np.float64, help="norm of beta", default=1.0)
@@ -359,4 +365,4 @@ if __name__ == "__main__":
 ##  PYTHONPATH=src python -m experiments2 -sim 4 -k 0 -para_min 30 -para_max 30 -para_gap 10 -pm 0 -nsd 1 -n 30 -mode "d" -gamma 0.1 -psd 10 -radius 1 -s 1
 ##  PYTHONPATH=src python -m experiments2 -sim 0 -k 100 -para_min 10 -para_max 10 -para_gap 10 -pm 0 -nsd 1 -n 20 -mode "d" -gamma 0.002 -psd 10 -radius 10 -s 1
 ## PYTHONPATH=src python -m experiments2 -sim 2 -k 0 -para_min 30 -para_max 30 -para_gap 10 -pm 0 -nsd 1 -n 20 -mode "d" -gamma 0.01 -psd 10 -radius 10 -s 1
-## PYTHONPATH=src python -m experiments2 -sim 1 -k 10 -para_min 90 -para_max 90 -para_gap 10 -pm 0 -nsd 2 -n 20 -mode "d" -gamma 0.1 -psd 1 -radius 10 -s 1
+## PYTHONPATH=src python -m experiments2 -sim 2 -k 10 -para_min 90 -para_max 90 -para_gap 10 -pm 0 -nsd 2 -n 20 -mode "d" -gamma 0.1 -psd 1 -radius 10 -s 1

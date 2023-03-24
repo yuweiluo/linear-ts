@@ -423,6 +423,8 @@ class Roful(Policy):
         # x:where to evaluate the integral
         # return: discrete integral of empirical distribution
 
+        
+
         return np.sum(func(support) @ weight)
 
     def plot_hist(self, save_name):
@@ -472,7 +474,7 @@ class GradientDirectedWorthFunction(ProductWorthFunction):
 
 
         # print(values.shape)
-
+        # print("lol")
         regret = values.max(axis=0, keepdims=True) - values
         regret = np.mean(regret, axis=1)
 
@@ -539,7 +541,7 @@ class ThinnessDirectedWorthFunction(ProductWorthFunction):
 
         values = ctx.arms @ self.candidates()
         # print(values.shape)
-
+        # print("lol")
         regret = values.max(axis=0, keepdims=True) - values
         regret = np.mean(regret, axis=1)
         # print(regret.shape)
@@ -654,6 +656,13 @@ class TsWorthFunction(ProductWorthFunction):
 
     def principle_candidates(self):
         return self.summary.mean + self.principle_compensator
+
+
+
+
+
+
+
 
 
 

@@ -6,6 +6,9 @@ import sys
 import matplotlib.pyplot as plt
 
 
+
+
+
 def plot_last_iter( df1, x_name,  y_name, x_axis, y_axis,index_name,  save_path):
     # plot y of last iteration against x
     plt.clf()
@@ -89,6 +92,8 @@ def plot_sample_path( df, x_name,  y_name, x_axis, y_axis,index_name_1, index_na
                             y_axis = r'$\|\|\hat{\beta} - \beta\|\|_2^2$'
                     else:
                         x = np.arange(horizon)
+
+
 
 
                     scale = 2.0
