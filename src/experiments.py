@@ -54,7 +54,7 @@ def example1_scenario(
             d,
             prior_var=prior_var,
             state=state_factory(),
-            inflation=Roful.dynamic_inflation(),
+            inflation=Roful.dynamic_inflation(const_infl),
         ),
     
         "TS-ThinnessDirected": Roful.thin_dirt(
@@ -115,7 +115,7 @@ def example2_scenario(
             d,
             prior_var=prior_var,
             state=state_factory(),
-            inflation=Roful.dynamic_inflation(),
+            inflation=Roful.dynamic_inflation(const_infl),
         ),
 
     
