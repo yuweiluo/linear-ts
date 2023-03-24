@@ -195,13 +195,11 @@ class Roful(Policy):
         return _inflation
 
 ###########Yuwei##########################
-
-    @staticmethod
-    def dynamic_inflation():
+    def dynamic_inflation(inflation = 1):
         def _inflation(summary):
-            return summary.thinness
+        return summary.thinness*inflation
 
-
+        return _inflation
 
 ###########Yuwei##########################
 
