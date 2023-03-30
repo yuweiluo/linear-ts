@@ -376,9 +376,7 @@ class Roful(Policy):
         self.worst_alpha.append(np.sqrt(lambda_min/lambda_max))
         self.betas.append(beta)
         self.zeta.append(zeta)
-        #self.proj_first.append(theta_hat.T @ self.summary.xx @ theta_hat/lambda_max/npl.norm(theta_hat)**2)
-        self.proj_first.append(self.param.T @ self.summary.xx @ self.param/lambda_max/npl.norm(self.param)**2)
-        
+        self.proj_first.append(theta_hat.T @ self.summary.xx @ theta_hat/lambda_max/npl.norm(theta_hat)**2)
         self.approx_alpha.append(self.calculate_alpha)
 
 

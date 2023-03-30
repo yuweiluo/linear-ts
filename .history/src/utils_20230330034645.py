@@ -36,17 +36,18 @@ class DataSummary:
     _scale: np.ndarray
     _dirty: bool
 
-    def __init__(self, dim, lambda_, noise_sd, param_bound):
+    def __init__(self, dim, prior_var, noise_sd, param_bound):
         self.lambda_ = lambda_
+        self.prior_var = 1.0 / lambda_
         # self.param_bound = (dim * self.prior_var) ** 0.5  # FIXME
         self.param_bound = param_bound
 
         self.xy = np.zeros(dim, dtype=np.float)
-        self.xx = np.eye(dim, dtype=np.float) *lambda_ * noise_sd**2
+        self.xx = np.eye(dim, dtype=np.float) / prior_var * noise_sd**2
 
         self._mean = np.zeros(dim, dtype=np.float)
         self._basis = np.eye(dim, dtype=np.float)
-        self._scale = np.ones(dim, dtype=np.float) *lambda_
+        self._scale = np.ones(dim, dtype=np.float) / prior_var
         self._dirty = False
         self.t = 0
 
@@ -75,9 +76,8 @@ class DataSummary:
         return self.xy.shape[0]
 
     @property
-    def TS_prior_var(self):
-        return 1.0 / self.lambda_
-
+    def lambda_(self):
+        return 1.0 / self.prior_var
 
     @property
     def mean(self) -> np.ndarray:
@@ -109,7 +109,7 @@ class DataSummary:
         term1 = np.log(self.scale / self.lambda_).sum() - 2 * np.log(delta)
         term2 = self.lambda_ * self.param_bound ** 2
 
-        return self.TS_prior_var**0.5 * term1 ** 0.5 + term2 ** 0.5
+        return self.prior_var**0.5 * term1 ** 0.5 + term2 ** 0.5
 
 
 class MetricAggregator:

@@ -92,7 +92,7 @@ class Roful(Policy):
     summary: DataSummary
     worth_func: WorthFunction
 
-    def __init__(self, d, lambda_, worth_func: WorthFunction,  param=None, noise_sd = None, t = None, radius = None, delta = None, inflation = None):
+    def __init__(self, d, prior_var, worth_func: WorthFunction,  param=None, noise_sd = None, t = None, radius = None, delta = None, inflation = None):
         super().__init__()
 
         self.t = t
@@ -103,7 +103,7 @@ class Roful(Policy):
         self.tt = 0
 
 
-        self.summary = DataSummary(d, lambda_, noise_sd, radius)
+        self.summary = DataSummary(d, prior_var, radius)
         self.worth_func = worth_func
         self.all_rew = 0
 
@@ -143,42 +143,42 @@ class Roful(Policy):
 
     @staticmethod
     # added param as input to calculate error
-    def ts(d, lambda_, inflation=1.0, state=None, param=None, noise_sd = None, t = None, radius = None, delta = None):
+    def ts(d, prior_var, inflation=1.0, state=None, param=None, noise_sd = None, t = None, radius = None, delta = None):
         if isinstance(inflation, float):
             inflation = Roful.const_inflation(inflation)
         
             
 
-        return Roful(d, lambda_, TsWorthFunction(inflation, state=state), param, noise_sd = noise_sd, t = t, radius = radius, delta = delta, inflation = inflation)
+        return Roful(d, prior_var, TsWorthFunction(inflation, state=state), param, noise_sd = noise_sd, t = t, radius = radius, delta = delta, inflation = inflation)
 
 
     @staticmethod
     # added param as input to calculate error
-    def spects(d, lambda_, inflation=1.0, state=None, param=None, noise_sd = None, t = None, radius = None, delta = None, alpha = None, radius_oful = None):
+    def spects(d, prior_var, inflation=1.0, state=None, param=None, noise_sd = None, t = None, radius = None, delta = None, alpha = None, radius_oful = None):
         if isinstance(inflation, float):
             inflation = Roful.const_inflation(inflation)
 
-        return Roful(d, lambda_, SgTsWorthFunction(inflation, alpha = alpha, radius = radius, noise_sd = noise_sd, delta = delta,radius_oful = radius_oful, tolerance = 1, state=state), param, noise_sd = noise_sd, t = t,  radius = radius, delta = delta, inflation = inflation)
+        return Roful(d, prior_var, SgTsWorthFunction(inflation, alpha = alpha, radius = radius, noise_sd = noise_sd, delta = delta,radius_oful = radius_oful, tolerance = 1, state=state), param, noise_sd = noise_sd, t = t,  radius = radius, delta = delta, inflation = inflation)
 
 
 
 
 
     @staticmethod
-    def greedy(d, lambda_, param=None, noise_sd = None, t = None, radius = None, delta = None):
-        return Roful(d, lambda_, GreedyWorthFunction(), param = param, noise_sd = noise_sd, t = t, radius = radius, delta = delta, inflation = Roful.const_inflation(1))
+    def greedy(d, prior_var, param=None, noise_sd = None, t = None, radius = None, delta = None):
+        return Roful(d, prior_var, GreedyWorthFunction(), param = param, noise_sd = noise_sd, t = t, radius = radius, delta = delta, inflation = Roful.const_inflation(1))
 
-    def pure_thin(d, lambda_, inflation=1.0, state=None):
+    def pure_thin(d, prior_var, inflation=1.0, state=None):
         if isinstance(inflation, float):
             inflation = Roful.const_inflation(inflation)
 
-        return Roful(d, lambda_, PureThinnessWorthFunction(inflation, state=state))
+        return Roful(d, prior_var, PureThinnessWorthFunction(inflation, state=state))
 
-    def thin_dirt(d, lambda_, inflation=1.0, state=None, param=None, noise_sd = None, t = None, radius = None):
+    def thin_dirt(d, prior_var, inflation=1.0, state=None, param=None, noise_sd = None, t = None, radius = None):
         if isinstance(inflation, float):
             inflation = Roful.const_inflation(inflation)
 
-        return Roful(d, lambda_, ThinnessDirectedWorthFunction(inflation, state=state), param, noise_sd = noise_sd, t = t, radius = radius)
+        return Roful(d, prior_var, ThinnessDirectedWorthFunction(inflation, state=state), param, noise_sd = noise_sd, t = t, radius = radius)
 
     @staticmethod
     def const_inflation(value):
@@ -210,8 +210,8 @@ class Roful(Policy):
         return lambda summary: summary.radius_det(delta)
 
     @staticmethod
-    def oful(d, lambda_, radius_SG, param=None, noise_sd = None, t = None, radius = None, delta = None):
-        return Roful(d, lambda_, SievedGreedyWorthFunction(radius_SG, 1.0), param=param, noise_sd = noise_sd, t = t, radius = radius, delta = delta, inflation = Roful.const_inflation(1))
+    def oful(d, alpha, radius_SG, param=None, noise_sd = None, t = None, radius = None, delta = None):
+        return Roful(d, alpha, SievedGreedyWorthFunction(radius_SG, 1.0), param=param, noise_sd = noise_sd, t = t, radius = radius, delta = delta, inflation = Roful.const_inflation(1))
 
 
 
@@ -247,7 +247,7 @@ class Roful(Policy):
             zeta = (theta_hat_Vt_norm_sqr - self.beta**2)**0.5
             #theta_norm_lower_bound = npl.norm(theta_hat) - beta/np.sqrt()
             theta_norm_upper_bound = np.maximum( npl.norm(theta_hat - self.beta/np.sqrt(lambda_min) * self.summary.basis[self.summary.d - 1]),npl.norm(theta_hat + self.beta/np.sqrt(lambda_min) * self.summary.basis[self.summary.d - 1]))
-            theta_norm_upper_bound = npl.norm(theta_hat) + self.beta/np.sqrt(lambda_min)
+            #theta_norm_upper_bound = npl.norm(theta_hat) + self.beta/np.sqrt(lambda_min)
 
             
             x_XXnorm_max  =  np.sqrt(theta_hat.T @ self.summary.xx @ self.summary.xx @ theta_hat)/zeta
@@ -292,14 +292,7 @@ class Roful(Policy):
         self.beta = self.inflation(self.summary) * self.summary.radius_det()
         #print(f"tt= {self.tt}, beta = {beta}, radius = {self.beta}")
         
-        '''
-        def radius_det(self, delta=1e-4):
-            term1 = np.log(self.scale / self.lambda_).sum() - 2 * np.log(delta)
-            term2 = self.lambda_ * self.param_bound ** 2
 
-            return self.prior_var**0.5 * term1 ** 0.5 + term2 ** 0.5
-        
-        '''
 
         weight_G = ( np.array(self.summary.basis)@np.array(self.param))**2 / npl.norm(self.param)**2 
 
@@ -376,9 +369,7 @@ class Roful(Policy):
         self.worst_alpha.append(np.sqrt(lambda_min/lambda_max))
         self.betas.append(beta)
         self.zeta.append(zeta)
-        #self.proj_first.append(theta_hat.T @ self.summary.xx @ theta_hat/lambda_max/npl.norm(theta_hat)**2)
-        self.proj_first.append(self.param.T @ self.summary.xx @ self.param/lambda_max/npl.norm(self.param)**2)
-        
+        self.proj_first.append(theta_hat.T @ self.summary.xx @ theta_hat/lambda_max/npl.norm(theta_hat)**2)
         self.approx_alpha.append(self.calculate_alpha)
 
 
@@ -814,7 +805,7 @@ class SgTsWorthFunction(WorthFunction):
             #theta_norm_lower_bound = npl.norm(theta_hat) - beta/np.sqrt()
             theta_norm_upper_bound = np.maximum( npl.norm(theta_hat - self.beta/np.sqrt(lambda_min) * self.summary.basis[self.summary.d - 1]),npl.norm(theta_hat + self.beta/np.sqrt(lambda_min) * self.summary.basis[self.summary.d - 1]))
             
-            theta_norm_upper_bound = npl.norm(theta_hat) + self.beta/np.sqrt(lambda_min)
+            #theta_norm_upper_bound = npl.norm(theta_hat) + self.beta/np.sqrt(lambda_min)
             
             x_XXnorm_max  =  np.sqrt(theta_hat.T @ self.summary.xx @ self.summary.xx @ theta_hat)/zeta
             x_XXnorm_min  =  zeta / theta_norm_upper_bound

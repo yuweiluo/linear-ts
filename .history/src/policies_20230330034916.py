@@ -210,8 +210,8 @@ class Roful(Policy):
         return lambda summary: summary.radius_det(delta)
 
     @staticmethod
-    def oful(d, lambda_, radius_SG, param=None, noise_sd = None, t = None, radius = None, delta = None):
-        return Roful(d, lambda_, SievedGreedyWorthFunction(radius_SG, 1.0), param=param, noise_sd = noise_sd, t = t, radius = radius, delta = delta, inflation = Roful.const_inflation(1))
+    def oful(d, alpha, radius_SG, param=None, noise_sd = None, t = None, radius = None, delta = None):
+        return Roful(d, alpha, SievedGreedyWorthFunction(radius_SG, 1.0), param=param, noise_sd = noise_sd, t = t, radius = radius, delta = delta, inflation = Roful.const_inflation(1))
 
 
 
@@ -376,9 +376,7 @@ class Roful(Policy):
         self.worst_alpha.append(np.sqrt(lambda_min/lambda_max))
         self.betas.append(beta)
         self.zeta.append(zeta)
-        #self.proj_first.append(theta_hat.T @ self.summary.xx @ theta_hat/lambda_max/npl.norm(theta_hat)**2)
-        self.proj_first.append(self.param.T @ self.summary.xx @ self.param/lambda_max/npl.norm(self.param)**2)
-        
+        self.proj_first.append(theta_hat.T @ self.summary.xx @ theta_hat/lambda_max/npl.norm(theta_hat)**2)
         self.approx_alpha.append(self.calculate_alpha)
 
 

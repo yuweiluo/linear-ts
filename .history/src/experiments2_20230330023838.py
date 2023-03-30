@@ -204,8 +204,9 @@ def run_experiments_d(
             labels = {"o_regret":"Oracle Instantaneous Regret",  "o_cumregret": "Oracle Cumulative Regret","regret": "Instantaneous Regret", "cumregret": "Cumulative Regret", "thinnesses": "Thinness", "errors": "Normalized Error", "lambda_maxs": "Maximal Eigenvalues", "lambda_mins": "Minimal Eigenvalues", "log_maxs_over_mins": "Log Max / Min", "lambdas_second": "Second Largest Eigenvalues", "lambdas_third": "Third Largest Eigenvalues", "biases": "Biases", "variances": "Variances", "risks": "Risks", "lambdas_d_minus_1": "d-1 Largest Eigenvalues", "lambdas_half_d": "d/2 Largest Eigenvalues", "projs_first": "$\\frac{\|\|\hat{\Theta}_{t-1}\|\|_{V_{t-1}}^2/\|\|\hat{\Theta}_{t-1}\|\|^2}{\lambda_{\max}(V_{t-1})} $", "errors_candidate": "Normalized Error of Candidate", "errors_pcandidate": "Normalized Error of P-Candidate", "worst_alphas": "Worst Alpha", "betas": "Beta", "zetas": "Zeta", "lambda_maxs_over_mins": "Max / Min", "approx_alphas": "$\hat{\\alpha}_t$"}
 
 
-            output = pd.DataFrame()
-            output_last = pd.DataFrame()
+
+
+            '''
             for name, metric in metrics.items():
                 # plt.clf()
                 for alg, agg in metric.items():
@@ -222,17 +223,21 @@ def run_experiments_d(
                     output_last['k'] = k
                     output_last[nm+'_mean'] = [mean[-1]]
                     output_last[nm+'_se'] = [se[-1]]
+            '''
 
-            outputs.extend([output])
-            outputs_last.extend([output_last])
+            output = pd.DataFrame({f'd': d, f'k': k, f'{alg}_{name}_mean': agg.get_mean_se()[0], f'{alg}_{name}_se': agg.get_mean_se()[1]} for name, metric in metrics.items() for alg, agg in metric.items())
+            output_last = pd.DataFrame({f'd': d, f'k': k, f'{alg}_{name}_mean': [agg.get_mean_se()[0][-1]], f'{alg}_{name}_se': [agg.get_mean_se()[1][-1]]} for name, metric in metrics.items() for alg, agg in metric.items())
+
+
+
+            outputs.append(output)
+            outputs_last.append(output_last)
 
 
             os.makedirs(output_folder_name, exist_ok=True)
             figure_folder_name = f"figures/figures-{output_name}"
             os.makedirs(figure_folder_name, exist_ok=True)
             output = pd.DataFrame()
-            
-            
 
             for name, metric in metrics.items():
                 plt.clf()
@@ -363,4 +368,3 @@ if __name__ == "__main__":
 ## PYTHONPATH=src python -m experiments2 -sim 0 -k 0 -para_min 10 -para_max 50 -para_gap 20 -pm 0 -nsd 1 -n 20 -mode "d" -gamma 0.002 -psd 10 -radius 10 -s 1
 
 ## PYTHONPATH=src python -m experiments2 -sim 2 -k 0 -para_min 30 -para_max 30 -para_gap 10 -pm 0 -nsd 1 -n 20 -mode "d" -gamma 0.01 -psd 1 -s 1
-## PYTHONPATH=src python -m experiments2 -sim 0 -k 0 -para_min 30 -para_max 30 -para_gap 20 -pm 0 -nsd 1 -n 20 -mode "d" -gamma 0.002 -psd 10 -radius 10 -s 1

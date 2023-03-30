@@ -21,7 +21,6 @@ def example2_scenario(
     param = state_factory().normal(prior_mu, prior_var ** 0.5, d)
     radius = (d * prior_var) ** 0.5
     lambda_ = noise_sd**2 / prior_var
-    
     if k != 3:
         print('*** Warning ***, k should be 3 for fixed action case')
     ctx_gen = Ex2CtxGenerator(d)
@@ -29,7 +28,10 @@ def example2_scenario(
 
     env = Environment(param, ctx_gen, noise_gen)
 
+    l = 1
 
+    def radius_SG():
+        return (d * np.log(1 + (l * env.t) ** 2)) ** 0.5 + (prior_var * d) ** 0.5
 
     print(f"prior_mu = {prior_mu}, prior_var = {prior_var}, noise_sd = {noise_sd}, radius = {radius}, delta = {delta}, alpha = {alpha}")
 
@@ -301,12 +303,12 @@ def russo_scenario(state_factory, k=1, d=100, t=1000, prior_var=2.0, arm_bound=0
     #prior_var = prior_var
     param = state_factory().normal(prior_mu, prior_var**0.5, d)
 
-    param = radius * param / np.linalg.norm(param, ord=2)
-    prior_var = radius**2 /d
-    lambda_ = noise_sd**2 / prior_var 
+    #param = radius * param / np.linalg.norm(param, ord=2)
+    #prior_var = radius**2 /d
+    #lambda_ = noise_sd**2 / prior_var 
     
-    #radius  = (d * prior_var) ** 0.5
-    #lambda_ = noise_sd**2 / prior_var
+    radius  = (d * prior_var) ** 0.5
+    lambda_ = noise_sd**2 / prior_var
     
     
     

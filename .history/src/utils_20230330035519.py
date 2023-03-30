@@ -38,6 +38,7 @@ class DataSummary:
 
     def __init__(self, dim, lambda_, noise_sd, param_bound):
         self.lambda_ = lambda_
+        self.prior_var = 1.0 / lambda_
         # self.param_bound = (dim * self.prior_var) ** 0.5  # FIXME
         self.param_bound = param_bound
 
@@ -109,7 +110,7 @@ class DataSummary:
         term1 = np.log(self.scale / self.lambda_).sum() - 2 * np.log(delta)
         term2 = self.lambda_ * self.param_bound ** 2
 
-        return self.TS_prior_var**0.5 * term1 ** 0.5 + term2 ** 0.5
+        return self.prior_var**0.5 * term1 ** 0.5 + term2 ** 0.5
 
 
 class MetricAggregator:

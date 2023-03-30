@@ -109,7 +109,7 @@ class DataSummary:
         term1 = np.log(self.scale / self.lambda_).sum() - 2 * np.log(delta)
         term2 = self.lambda_ * self.param_bound ** 2
 
-        return self.TS_prior_var**0.5 * term1 ** 0.5 + term2 ** 0.5
+        return self.prior_var**0.5 * term1 ** 0.5 + term2 ** 0.5
 
 
 class MetricAggregator:
