@@ -514,11 +514,7 @@ class ThinnessDirectedWorthFunction(ProductWorthFunction):
 
         basis = self.summary.basis
         scale = self.summary.scale
-        # print(basis.shape)
-        # print(scale.shape)
 
-        # print((1/scale[np.newaxis,:]).shape)
-        #print((1/scale ** 0.5 @rand  ).shape)
         self.compensator = (
             #self.inflation(self.summary) * basis.T @ (rand / scale ** 0.5)
             basis.T @ (np.multiply(1/scale[:, np.newaxis] ** 0.5, rand))
@@ -631,6 +627,10 @@ class TsWorthFunction(ProductWorthFunction):
         self.radius_det = self.summary.radius_det()
         self.radius_TS = self.summary.radius_TS()
 
+        #print(f"scale = {scale}") 
+        #print(f"self.summary.scale[0] = {self.summary.scale[0]}")
+        #print(f"inv_principle_scale= {inv_principle_scale}")
+        #print(f"thinness = {self.summary.thinness}")
 
         self.compensator = (
             self.radius_TS  * basis.T @ (rand / scale ** 0.5)  /  self.summary.radius_normal(self.delta)

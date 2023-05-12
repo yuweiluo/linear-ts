@@ -322,7 +322,8 @@ class Roful(Policy):
 
         '''
         scale_ = self.summary.scale/ self.tt
-
+        
+        
         def func(x):
             #print(f"  gamma = {gamma}, ")
             func_ = lambda y:  self.func0(y,x, gamma)
@@ -440,12 +441,16 @@ class GradientDirectedWorthFunction(ProductWorthFunction):
     def update(self):
         d = self.d
         rand = self.state.randn(d, 15)
+        # print(rand.shape)
 
         basis = self.summary.basis
         scale = self.summary.scale
 
         self.xx_inv = basis.T * 1 / scale@  basis
 
+
+        # print(basis.shape)
+        # print(scale.shape)
 
         # print((1/scale[np.newaxis,:]).shape)
         #print((1/scale ** 0.5 @rand  ).shape)
@@ -631,6 +636,10 @@ class TsWorthFunction(ProductWorthFunction):
         self.radius_det = self.summary.radius_det()
         self.radius_TS = self.summary.radius_TS()
 
+        #print(f"scale = {scale}") 
+        #print(f"self.summary.scale[0] = {self.summary.scale[0]}")
+        #print(f"inv_principle_scale= {inv_principle_scale}")
+        #print(f"thinness = {self.summary.thinness}")
 
         self.compensator = (
             self.radius_TS  * basis.T @ (rand / scale ** 0.5)  /  self.summary.radius_normal(self.delta)
