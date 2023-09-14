@@ -637,6 +637,7 @@ class SievedGreedyWorthFunction(WorthFunction):
             self.alpha_approx = 1.0
             #self.alpha_approx = (self.radius_TS+self.radius_det)/self.radius_det
             
+            #print(f"radius_TS_in = {self.radius_TS}, radius_det_in = {self.summary.radius_det()}, alpha_approx = {self.alpha_approx}")
             self.alphas.append(  self.alpha_approx  )
             self.mus.append(self.mu_approx)
         else:
@@ -654,6 +655,7 @@ class SievedGreedyWorthFunction(WorthFunction):
         return np.where(survivors, centers, minus_infty)
 
     def confidence_center(self, arms):
+        #print(f"confidence_center = {arms @ self.summary.mean}")
 
         return arms @ self.summary.mean
         

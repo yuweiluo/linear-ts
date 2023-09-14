@@ -177,14 +177,12 @@ class Roful(Policy):
     @staticmethod
     def sieved_greedy(d, alpha, radius, tolerance=1.0):
         return Roful(d, alpha, SievedGreedyWorthFunction(radius, tolerance))
-    
     @staticmethod
     def pure_thin(d, lambda_, inflation=1.0, state=None):
         if isinstance(inflation, float):
             inflation = Roful.const_inflation(inflation)
 
         return Roful(d, lambda_, PureThinnessWorthFunction(inflation, state=state))
-    
     @staticmethod
     def thin_dirt(d, lambda_, inflation=1.0, state=None, param=None, noise_sd = None, t = None, radius = None):
         if isinstance(inflation, float):
@@ -417,6 +415,64 @@ class Roful(Policy):
 
 
 
+class GradientDirectedWorthFunction(ProductWorthFunction):
+    compensator: np.ndarray
+
+    def __init__(self, inflation, state=npr):
+        self.inflation = inflation
+        self.state = state
+        self.alphas = []
+
+    @property
+    def d(self):
+        return self.summary.d
+
+    def update(self):
+        d = self.d
+        rand = self.state.randn(d, 15)
+
+        basis = self.summary.basis
+        scale = self.summary.scale
+
+        self.xx_inv = basis.T * 1 / scale@  basis
+
+
+        # print((1/scale[np.newaxis,:]).shape)
+        #print((1/scale ** 0.5 @rand  ).shape)
+        self.compensator = (
+            #self.inflation(self.summary) * basis.T @ (rand / scale ** 0.5)
+            basis.T @ (np.multiply(1/scale[:, np.newaxis] ** 0.5, rand)) 
+        )
+
+    def compute(self, ctx: Context) -> np.ndarray:
+
+        values = ctx.arms @ self.candidates()
+
+
+
+
+        regret = values.max(axis=0, keepdims=True) - values
+        regret = np.mean(regret, axis=1)
+
+        grad_norm_list = [ np.sqrt(arm.T @ self.xx_inv @ arm/ npl.norm(theta_hat)**2)  for arm in ctx.arms]
+
+
+        svd_list = [npl.svd(self.summary.xx + np.outer(arm, arm),
+                            hermitian=True)for arm in ctx.arms]
+        thinness_list = np.array(
+            [(max(1/svd_[1]) * self.d / sum(1/svd_[1])) ** 0.5 for svd_ in svd_list])
+        thinness_list_delta = self.summary.thinness - thinness_list
+
+        values = -(regret**2) * (1 + np.exp(- thinness_list_delta))
+
+        if values.ndim == 2:
+            values = np.max(values, axis=1)
+
+        return values
+
+    def candidates(self):
+        return self.summary.mean[:, np.newaxis] + self.compensator #
+
 
 class ThinnessDirectedWorthFunction(ProductWorthFunction):
     compensator: np.ndarray
@@ -637,6 +693,7 @@ class SievedGreedyWorthFunction(WorthFunction):
             self.alpha_approx = 1.0
             #self.alpha_approx = (self.radius_TS+self.radius_det)/self.radius_det
             
+            #print(f"radius_TS_in = {self.radius_TS}, radius_det_in = {self.summary.radius_det()}, alpha_approx = {self.alpha_approx}")
             self.alphas.append(  self.alpha_approx  )
             self.mus.append(self.mu_approx)
         else:
@@ -654,6 +711,7 @@ class SievedGreedyWorthFunction(WorthFunction):
         return np.where(survivors, centers, minus_infty)
 
     def confidence_center(self, arms):
+        #print(f"confidence_center = {arms @ self.summary.mean}")
 
         return arms @ self.summary.mean
         

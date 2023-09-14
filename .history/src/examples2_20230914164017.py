@@ -84,7 +84,7 @@ def emp_scenario(
         features = scaler.fit_transform(df.iloc[:, :-1])
         labels = df.iloc[:, -1]
         k = 4
-
+        
 
     elif dataset == 'JapaneseVowels':
         data, meta = arff.loadarff('datasets/JapaneseVowels.arff')
