@@ -38,9 +38,9 @@ def run_experiments_d(
     d_list = np.arange(np.int64(d_min), np.int64(
         d_gap + d_max), np.int64(d_gap))
 
-    # k_list = np.array([1, 3, 10, 50, 100])
-    # k_list = np.array([1,10,100])
-    # k_list = np.array([0])
+    #k_list = np.array([1, 3, 10, 50, 100])
+    #k_list = np.array([1,10,100])
+    #k_list = np.array([0])
     k_list = np.array([100])
 
     saver = save_results()

@@ -15,6 +15,8 @@ from utils import predicted_risk
 from utils import timing
 from utils import timing_block
 
+from scipy.optimize import fsolve
+
 
 class Metric:
     regrets: List[float]

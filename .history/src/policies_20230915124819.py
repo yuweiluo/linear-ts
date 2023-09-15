@@ -6,6 +6,7 @@ from typing import List, Callable
 import numpy as np
 import numpy.linalg as npl
 import numpy.random as npr
+import matplotlib.pyplot as plt
 import math
 
 from envs import Context
@@ -14,6 +15,12 @@ from utils import DataSummary
 from utils import predicted_risk
 from utils import timing
 from utils import timing_block
+
+from statsmodels.distributions.empirical_distribution import ECDF
+from scipy.optimize import fsolve
+
+import cvxpy as cp
+#import gurobipy
 
 
 class Metric:
@@ -55,6 +62,7 @@ class WorthFunction:
 
     def bind(self, summary: DataSummary):
         self.summary = summary
+
         self.update()
 
     def update(self):
@@ -138,6 +146,7 @@ class Roful(Policy):
     def ts(d, lambda_, inflation=1.0, state=None, param=None, noise_sd=None, t=None, radius=None, delta=None):
         if isinstance(inflation, float):
             inflation = Roful.const_inflation(inflation)
+
         return Roful(d, lambda_, TsWorthFunction(inflation, delta=delta, state=state), param, noise_sd=noise_sd, t=t, radius=radius, delta=delta, inflation=inflation)
 
     @staticmethod
@@ -163,6 +172,7 @@ class Roful(Policy):
     def pure_thin(d, lambda_, inflation=1.0, state=None):
         if isinstance(inflation, float):
             inflation = Roful.const_inflation(inflation)
+
         return Roful(d, lambda_, PureThinnessWorthFunction(inflation, state=state))
 
     @staticmethod
@@ -183,6 +193,7 @@ class Roful(Policy):
                 return summary.radius_det()
             else:
                 return value
+
         return _inflation
 
     @staticmethod
@@ -204,6 +215,7 @@ class Roful(Policy):
 
     @staticmethod
     def ts_inflation_alter(delta=1e-3):
+
         return lambda summary: summary.noise_sd * summary.radius_normal(delta) / summary.radius_det(delta)
 
     @property
@@ -212,12 +224,13 @@ class Roful(Policy):
 
     def choose_arm(self, ctx: Context) -> int:
         self.worth_func.bind(self.summary)  # mark
-        values = self.worth_func.compute(ctx)
 
+        values = self.worth_func.compute(ctx)
         return np.argmax(values).item()
 
     def exploration_amount(self, arms):
         scale = arms @ npl.solve(self.summary.xx, arms.T)
+
         if len(scale.shape) == 2:
             scale = np.diag(scale)
 
@@ -226,6 +239,7 @@ class Roful(Policy):
     def calculate_oracle_alpha(self, feedback: Feedback):
         ctx = feedback.ctx
         expl = self.exploration_amount(ctx.arms)
+
         true_value = ctx.arms @ self.param
         if expl[np.argmax(true_value).item()] == 0 and expl[feedback.arm_idx] == 0:
             oracle_alpha = 1.0
@@ -281,6 +295,7 @@ class Roful(Policy):
 
             print(f"bad ratio = {self.bad/self.tt}")
 
+
         # append the results to the list
         self.thinnesses.append(self.summary.thinness)
         self.lambda_max.append(lambda_max)
@@ -299,8 +314,8 @@ class Roful(Policy):
 
         beta_TS = self.inflation(self.summary) * self.summary.radius_det()
 
-        assert ((self.beta+beta_TS)/self.beta == (self.summary.radius_TS() +
-                self.summary.radius_det())/self.summary.radius_det())
+        assert((self.beta+beta_TS)/self.beta == (self.summary.radius_TS() +
+               self.summary.radius_det())/self.summary.radius_det())
 
         self.iota.append(self.inflation(self.summary))
         self.betas_TS.append(beta_TS)
@@ -310,6 +325,33 @@ class Roful(Policy):
 
         self.outputs = (self.worth_func.alphas, self.worth_func.mus, self.worst_alpha, self.metrics.regrets, self.thinnesses, self.iota,
                         self.lambda_max, self.lambda_min,  self.proj_first,  self.betas, self.betas_TS, self.worth_func.discrete_alphas)
+
+    @staticmethod
+    def solve_LP(XX_scale, XX_norm_lower, XX_norm_upper):
+        n = XX_scale.shape[0]
+        x = cp.Variable(n)
+        XX_scale_inv = 1/XX_scale
+
+        constraints = [x >= 0, cp.norm(
+            x, 1) <= 1,  x@XX_scale <= XX_norm_upper,  x@XX_scale >= XX_norm_lower]
+
+        prob = cp.Problem(cp.Maximize(x@XX_scale_inv), constraints)
+        prob.solve(solver=cp.GUROBI)
+
+        return np.sqrt(prob.value), x.value
+
+    @staticmethod
+    def solve_LP2(XX_scale, center, beta):
+        n = XX_scale.shape[0]
+        x = cp.Variable(n)
+        XX_scale_inv = 1/XX_scale
+
+        constraints = [x**2 @ XX_scale <= beta**2]
+
+        prob = cp.Problem(cp.Minimize(cp.norm(x + center, 2)), constraints)
+        prob.solve(solver=cp.GUROBI)
+
+        return prob.value, x.value
 
 
 class ThinnessDirectedWorthFunction(ProductWorthFunction):
@@ -378,7 +420,7 @@ class PureThinnessWorthFunction(ProductWorthFunction):
         scale = self.summary.scale
 
         self.compensator = (
-            # self.inflation(self.summary) * basis.T @ (rand / scale ** 0.5)
+            #self.inflation(self.summary) * basis.T @ (rand / scale ** 0.5)
             basis.T @ (rand / scale ** 0.5)
         )
 
@@ -454,7 +496,7 @@ class TsWorthFunction(ProductWorthFunction):
 
         discrete_mu = (self.summary.inflation(
             self.summary)+1.0) * (1 + discrete_alpha)
-        # self.mu_approx = self.summary.calculate_mu
+        #self.mu_approx = self.summary.calculate_mu
         self.mu_approx = discrete_mu
         self.alphas.append(self.alpha_approx)
         self.mus.append(self.mu_approx)
@@ -508,7 +550,7 @@ class SievedGreedyWorthFunction(WorthFunction):
         survivors = uppers >= threshold
 
         # computing the values
-        assert (self.tolerance == 1.0)
+        assert(self.tolerance == 1.0)
         self.radius_TS = self.summary.radius_TS()
         self.radius_det = self.summary.radius_det()
         discrete_alpha = self.summary.calculate_discrete_alpha(ctx.arms)
@@ -521,7 +563,7 @@ class SievedGreedyWorthFunction(WorthFunction):
             self.discrete_alpha = 1.0
             self.discrete_alphas.append(self.discrete_alpha)
             self.alpha_approx = 1.0
-            # self.alpha_approx = (self.radius_TS+self.radius_det)/self.radius_det
+            #self.alpha_approx = (self.radius_TS+self.radius_det)/self.radius_det
 
             self.alphas.append(self.alpha_approx)
             self.mus.append(self.mu_approx)
@@ -529,7 +571,7 @@ class SievedGreedyWorthFunction(WorthFunction):
             self.discrete_alpha = discrete_alpha
             self.discrete_alphas.append(self.discrete_alpha)
             self.alpha_approx = self.summary.calculate_alpha
-            # self.mu_approx = self.summary.calculate_mu
+            #self.mu_approx = self.summary.calculate_mu
             self.mu_approx = discrete_mu
             self.alphas.append(self.alpha_approx)
             self.mus.append(self.mu_approx)
@@ -580,7 +622,7 @@ class SgTsWorthFunction(WorthFunction):
 
     def compute(self, ctx: Context) -> np.ndarray:
         values = ctx.arms @ self.candidates()
-        # true_value = ctx.arms @ self.summary.param
+        #true_value = ctx.arms @ self.summary.param
         mean_value = ctx.arms @ self.summary.mean
         lowers, centers, uppers = self.confidence_bounds(ctx.arms)
         exp_amount = self.exploration_amount(ctx.arms)
@@ -591,7 +633,7 @@ class SgTsWorthFunction(WorthFunction):
         minus_infty = np.ones_like(values) * (-np.inf)
         threshold = self.alpha * np.max(exp_amount)
         survivors = exp_amount >= threshold
-        # alpha_approx = self.calculate_alpha
+        #alpha_approx = self.calculate_alpha
         alpha_approx = self.summary.calculate_alpha
         mu_approx = self.summary.calculate_mu
 
