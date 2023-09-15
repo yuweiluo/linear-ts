@@ -126,6 +126,10 @@ def run_experiments_d(
             figure_folder_name = f"figures/figures-{output_name}"
             figure_name_suffix = f"-{k}-{n}-{d}-{k}-{t}-{sim}-{prior_mu}-{prior_sd}-{noise_sd}-{thin_thresh}-{const_infl}.jpg"
             plot_output(metrics, output, saver.labels, figure_folder_name,figure_name_suffix)
+            
+
+
+
 
             
     # plot curves of each k together 
