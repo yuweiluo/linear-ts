@@ -1,18 +1,3 @@
-import numpy as np
-
-from envs import Environment
-from envs import NoiseGenerator
-from envs import StochasticContextGenerator as CtxGenerator
-from envs import GroupedStochasticContextGenerator as GroupedCtxGenerator
-from envs import Example2ContextGenerator as Ex2CtxGenerator
-from envs import Example1ContextGenerator as Ex1CtxGenerator
-from envs import Context
-
-from policies import Roful
-from utils import timing_block
-
-
-
 import argparse
 
 from collections import defaultdict
@@ -48,10 +33,7 @@ def run_experiments_d(
     sim=0,
     gamma=1,
     radius=1.0,
-    alpha = 0.5,
-    mu_TS = 10.0,
-    mu_Greedy = 12.0,
-    dataset = 'eeg'
+    alpha = 0.5
 ):
     state_factory = StateFactory(s)
 
@@ -60,20 +42,19 @@ def run_experiments_d(
     #k_list = np.array([1, 3, 10, 50, 100])
     #k_list = np.array([1,10,100])
     #k_list = np.array([0])
-    k_list = np.array([2])
+    k_list = np.array([100])
     #k_list = np.array([np.inf])
-
     saver = save_results()
 
     timestr = time.strftime("%Y%m%d-%H%M%S")
-    output_name = f"dims-{d_min}-{d_max}-{d_gap}-gamma-{gamma}-radius-{radius}-prior_sd-{prior_sd}-noise_sd-{noise_sd}-sim-{sim}-k-{k}-t-{t}-prior_mu-{prior_mu}-thin_thresh-{thin_thresh}-const_infl-{const_infl}-n-{n}-time-{timestr}-mu_TS-{mu_TS} -mu_Greedy-{mu_Greedy}-dataset-{dataset}"
+    output_name = f"dims-{d_min}-{d_max}-{d_gap}-gamma-{gamma}-radius-{radius}-prior_sd-{prior_sd}-noise_sd-{noise_sd}-sim-{sim}-k-{k}-t-{t}-prior_mu-{prior_mu}-thin_thresh-{thin_thresh}-const_infl-{const_infl}-n-{n}-time-{timestr}-alpha-{alpha}"
 
     output_folder_name = 'my_outputs'
 
 
     for d in d_list:
 
-        t = np.int64(np.ceil(d/gamma))  # mark
+        t = np.int64(np.ceil(d/gamma))  # FIXME
 
         predicted_risk_ = predicted_risk(gamma, radius, noise_sd)
 
@@ -124,20 +105,6 @@ def run_experiments_d(
                         const_infl=const_infl,
                         g= 1,
                         alpha = alpha)
-                elif sim ==5:  # classification problems
-                    
-                    print('run_classification_problems')
-                    results = emp_scenario(
-                        d=d, k=2, t=t, state_factory=state_factory,
-                        prior_var=prior_sd **2 ,
-                        noise_sd=noise_sd,
-                        thin_thresh=thin_thresh,
-                        const_infl=const_infl,
-                        radius = radius,
-                        alpha = alpha,
-                        mu_TS = mu_TS,
-                        mu_Greedy = mu_Greedy,
-                        dataset = dataset)
                 elif sim ==0:  # Run Russo Scenario
                         print('Run Russo Scenario')
                         results = russo_scenario(
@@ -149,22 +116,44 @@ def run_experiments_d(
                             const_infl=const_infl,
                             radius = radius,
                             alpha = alpha)
+                        
                 
                 saver.aggregate_metrics(results)
-
-
-
 
             metrics, output, output_last = saver.aggregate_output()
             outputs, outputs_last = saver.save_outputs(output_folder_name,output_name)
             
             figure_folder_name = f"figures/figures-{output_name}"
             figure_name_suffix = f"-{k}-{n}-{d}-{k}-{t}-{sim}-{prior_mu}-{prior_sd}-{noise_sd}-{thin_thresh}-{const_infl}.jpg"
-            plot_output(metrics, output, saver.labels, figure_folder_name,figure_name_suffix,dataset)
 
+            os.makedirs(figure_folder_name, exist_ok=True)
+            plot_output()
+            markers = [6,4,5,7,'o', 'v', '^', '<', '>', 's', 'p', '*', 'h', 'H', 'D', 'd']
+            
+            for name, metric in metrics.items():
+                plt.clf()
+                marker_index = 0
+                max_y = []
+                for alg, agg in metric.items():
+                    agg.plot(plt, alg, marker=markers[marker_index], mark_num=10)
 
+                    mean, se = agg.get_mean_se()
+                    nm = alg+'_'+name
+                    output[nm+'_mean'] = mean
+                    output[nm+'_se'] = se
+                    marker_index += 1
+                    max_y.append(np.max(mean+se))
+                # get the max mean for the for loop above to set the ylim:
+                if name == "cumregret":
+                    print(max_y)
+                if name == "mus" or name == "discrete_alphas":
+                    plt.yscale("log")
+                plt.xlabel("Time")
+                plt.ylabel(saver.labels[name])
 
-
+                plt.legend()
+                plt.savefig(f"{figure_folder_name}/{name}-{k}-{n}-{d}-{k}-{t}-{sim}-{prior_mu}-{prior_sd}-{noise_sd}-{thin_thresh}-{const_infl}.jpg", dpi = 600)
+                #output.to_csv(f"{figure_folder_name}/k = {k}{name}-{n}-{d}-{k}-{t}-{sim}-{prior_mu}-{prior_sd}-{noise_sd}-{thin_thresh}-{const_infl}.csv", index=False)
 
 
 
@@ -209,9 +198,9 @@ def run_experiments_d(
             f"{figure_folder_name}/{'last_d'}-{name}-{output_name}.jpg", dpi = 600)
 
 
-
-    # plot curves of each k together 
-    # plot_statistics(output_folder_name, output_name, figure_folder_name, mode = 'd', gamma = gamma)
+            
+    #plot curves of each k together 
+    plot_statistics(output_folder_name, output_name, figure_folder_name, mode = 'd', gamma = gamma)
 
     outputs.to_csv(f"{figure_folder_name}/all-{output_name}.csv", index=False)
     outputs_last.to_csv(f"{figure_folder_name}/all-last-{output_name}.csv", index=False)
@@ -238,16 +227,13 @@ def __main__():
     parser.add_argument("-gamma", type=np.float64, help="ratio", default=0.1)
     parser.add_argument("-mode", type=str, help="mode", default="d")
     parser.add_argument("-radius", type=np.float64, help="norm of beta", default=1.0)
-    parser.add_argument("-mu_TS", type=np.float64, help="ratio threshold for TS", default=10.0)
-    parser.add_argument("-mu_Greedy", type=np.float64, help="ratio threshold for Greedy", default=12.0)
-    parser.add_argument("-alpha", type=np.float64, help="placeholder", default=0.0)
-    parser.add_argument("-dataset", type=str, help="dataset name", default="EEG")
+    parser.add_argument("-alpha", type=np.float64, help="ratio threshold", default=0.5)
     args = parser.parse_args()
     '''
 
     '''
     if args.mode == 'd':
-        run_experiments_d(n=args.n, d_min=args.para_min, d_max=args.para_max, d_gap=args.para_gap, k=args.k, t=args.t, s=args.s, prior_mu=args.pm, prior_sd=args.psd, noise_sd=args.nsd, thin_thresh=args.th, const_infl=args.inf, sim=args.sim, gamma=args.gamma, radius = args.radius, alpha = args.alpha, mu_TS =args.mu_TS, mu_Greedy =args.mu_Greedy, dataset = args.dataset)
+        run_experiments_d(n=args.n, d_min=args.para_min, d_max=args.para_max, d_gap=args.para_gap, k=args.k, t=args.t, s=args.s, prior_mu=args.pm, prior_sd=args.psd, noise_sd=args.nsd, thin_thresh=args.th, const_infl=args.inf, sim=args.sim, gamma=args.gamma, radius = args.radius, alpha = args.alpha)
 
 
 
@@ -261,14 +247,15 @@ if __name__ == "__main__":
 
 
 
+## Jun 23
+# PYTHONPATH=src python -m experiments -sim 0 -k 0 -para_min 50 -para_max 50 -para_gap 20 -pm 0 -nsd 1 -n 20 -mode "d" -gamma 0.02 -psd 10 -radius 10 -s 1 -alpha 8.0
 
+# PYTHONPATH=src python -m experiments -sim 4 -k 0 -para_min 50 -para_max 50 -para_gap 20 -pm 0 -nsd 1 -n 20 -mode "d" -gamma 0.02 -psd 10 -radius 10 -s 1 -alpha 12.0
 
-# PYTHONPATH=src python -m emp1 -sim 5 -k 0 -para_min 150 -para_max 150 -para_gap 20 -pm 0 -nsd 0.2 -n 1 -mode "d" -gamma 0.1 -psd 0.001 -radius 5 -s 1 -alpha 0.0 -dataset 'cardiotocography'
+# PYTHONPATH=src python -m experiments -sim 2 -k 3 -para_min 50 -para_max 50 -para_gap 20 -pm 10 -nsd 1 -n 20 -mode "d" -gamma 0.1 -psd 1 -radius 1 -s 1 -alpha 8.0
 
-# PYTHONPATH=src python -m emp1 -sim 5 -k 0 -para_min 1450 -para_max 1450 -para_gap 20 -pm 0 -nsd 0.2 -n 20 -mode "d" -gamma 0.1 -psd 0.001 -radius 5 -s 1 -alpha 0.0 -dataset 'eeg'
+# PYTHONPATH=src python -m experiments -sim 5 -k 0 -para_min 50 -para_max 50 -para_gap 20 -pm 0 -nsd 1 -n 20 -mode "d" -gamma 0.02 -psd 10 -radius 10 -s 1 -alpha 8.0
 
-# PYTHONPATH=src python -m emp1 -sim 5 -k 0 -para_min 1000 -para_max 1000 -para_gap 20 -pm 0 -nsd 0.1 -n 1 -mode "d" -gamma 0.1 -psd 0.001 -radius 5 -s 1 -alpha 8.0 -dataset 'eye_movements' 
+# PYTHONPATH=src python -m experiments -sim 0 -k 0 -para_min 50 -para_max 50 -para_gap 20 -pm 0 -nsd 1 -n 20 -mode "d" -gamma 0.02 -psd 10 -radius 10 -s 1 -alpha 12.0
 
-# PYTHONPATH=src python -m emp1 -sim 5 -k 0 -para_min 1450 -para_max 1450 -para_gap 20 -pm 0 -nsd 0.2 -n 1 -mode "d" -gamma 0.1 -psd 0.01 -radius 5 -s 1 -alpha 0.0 -dataset 'satimage'
-
-# PYTHONPATH=src python -m emp1 -sim 5 -k 0 -para_min 150 -para_max 150 -para_gap 20 -pm 0 -nsd 0.2 -n 1 -mode "d" -gamma 0.1 -psd 0.001 -radius 5 -s 1 -alpha 0.0 -dataset 'cardiotocography'
+# PYTHONPATH=src python -m experiments -sim 0 -k 0 -para_min 5 -para_max 5 -para_gap 5 -pm 0 -nsd 1 -n 3 -mode "d" -gamma 0.02 -psd 10 -radius 10 -s 1 -alpha 12.0

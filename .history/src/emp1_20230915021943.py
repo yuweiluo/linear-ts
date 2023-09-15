@@ -210,7 +210,7 @@ def run_experiments_d(
 
 
 
-    # plot curves of each k together 
+    #plot curves of each k together 
     # plot_statistics(output_folder_name, output_name, figure_folder_name, mode = 'd', gamma = gamma)
 
     outputs.to_csv(f"{figure_folder_name}/all-{output_name}.csv", index=False)

@@ -334,8 +334,7 @@ class save_results:
         "betas_TS": "Beta TS", 
         "mus": "$\mu_t$", 
         "cumumus": "$\\left(\sum_{t=1}^T\mu_t^2 \\right )^{1/2}$", 
-        "discrete_alphas": "$\hat{\\alpha}_t$",
-        "incorrect_frac": "Fraction of incorrect decisions"
+        "discrete_alphas": "$\hat{\\alpha}_t$"
         }
         
     def init_outputs(self, d, k):

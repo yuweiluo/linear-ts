@@ -6,9 +6,9 @@ import sys
 import matplotlib.pyplot as plt
 
 
-def plot_output(metrics, output, labels, figure_folder_name,figure_name_suffix,dataset = None):
+def plot_output(metrics, output, saver, figure_folder_name,figure_name_suffix):
     markers = [6,4,5,7,'o', 'v', '^', '<', '>', 's', 'p', '*', 'h', 'H', 'D', 'd']
-    os.makedirs(figure_folder_name, exist_ok=True)
+    
     for name, metric in metrics.items():
         plt.clf()
         marker_index = 0
@@ -22,23 +22,15 @@ def plot_output(metrics, output, labels, figure_folder_name,figure_name_suffix,d
             output[nm+'_se'] = se
             marker_index += 1
             max_y.append(np.max(mean+se))
-        if name == "incorrect_frac":
-            if dataset == 'eeg':
-                plt.ylim(0.34, 0.54)
-            elif dataset == 'cardiotocography':
-                plt.ylim(0.0, 1.0 )
-            elif dataset == 'eye_movements':
-                plt.ylim(0.4, 0.8)
         # get the max mean for the for loop above to set the ylim:
         if name == "cumregret":
             print(max_y)
         if name == "mus" or name == "discrete_alphas":
             plt.yscale("log")
         plt.xlabel("Time")
-        plt.ylabel(labels[name])
+        plt.ylabel(saver.labels[name])
 
         plt.legend()
-        figure_file_name = figure_folder_name + f"/{name}" + figure_name_suffix
         plt.savefig(figure_file_name, dpi = 600)
 
 

@@ -6,8 +6,44 @@ import sys
 import matplotlib.pyplot as plt
 
 
+def plot_output(metrics, output, saver, figure_folder_name, figure_name):
+    markers = [6,4,5,7,'o', 'v', '^', '<', '>', 's', 'p', '*', 'h', 'H', 'D', 'd']
+    
+    for name, metric in metrics.items():
+        plt.clf()
+        marker_index = 0
+        max_y = []
+        for alg, agg in metric.items():
+            agg.plot(plt, alg, marker=markers[marker_index], mark_num=10)
+
+            mean, se = agg.get_mean_se()
+            nm = alg+'_'+name
+            output[nm+'_mean'] = mean
+            output[nm+'_se'] = se
+            marker_index += 1
+            max_y.append(np.max(mean+se))
+        # get the max mean for the for loop above to set the ylim:
+        if name == "cumregret":
+            print(max_y)
+        if name == "mus" or name == "discrete_alphas":
+            plt.yscale("log")
+        plt.xlabel("Time")
+        plt.ylabel(saver.labels[name])
+
+        plt.legend()
+        plt.savefig(f"{figure_folder_name}/k = {k}-{name}-{n}-{d}-{k}-{t}-{sim}-{prior_mu}-{prior_sd}-{noise_sd}-{thin_thresh}-{const_infl}.jpg", dpi = 600)
+
+
 def plot_last_iter( df1, x_name,  y_name, x_axis, y_axis,index_name,  save_path):
     # plot y of last iteration against x
+    # df1: dataframe
+    # x_name: column name of x
+    # y_name: column name of y
+    # x_axis: label of x axis
+    # y_axis: label of y axis
+    # index_name: column name of index
+    # save_path: path to save the figure
+    
     markers = ['o', 'v', '^', '<', '>', 's', 'p', '*', 'h', 'H', 'D', 'd']
     marker_index = 0
     plt.clf()
@@ -22,19 +58,13 @@ def plot_last_iter( df1, x_name,  y_name, x_axis, y_axis,index_name,  save_path)
             se = np.array(df2[y_name+'_se'])
 
             x = np.array(df2[x_name])
-            
-            print(f"index: {index},  x: {x}, y: {mean}, se: {se}")
-            
             ################variance
             if x_name == 'prior_sd':
                 x = x**2
             ################
-
             scale = 2.0
             lower = mean - scale * se
             upper = mean + scale * se
-
-            
 
             plt.fill_between(x, lower, upper, alpha=0.2)
             plt.plot(x, mean, label=index_name+'='+str(index), marker=markers[marker_index], markevery=50)
@@ -44,7 +74,6 @@ def plot_last_iter( df1, x_name,  y_name, x_axis, y_axis,index_name,  save_path)
     plt.ylabel(y_axis)
     plt.legend(loc = 'best', prop={'size': 6})
     plt.savefig(save_path, dpi = 600)
-
 
 
 

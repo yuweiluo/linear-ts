@@ -6,40 +6,7 @@ import sys
 import matplotlib.pyplot as plt
 
 
-def plot_output(metrics, output, labels, figure_folder_name,figure_name_suffix,dataset = None):
-    markers = [6,4,5,7,'o', 'v', '^', '<', '>', 's', 'p', '*', 'h', 'H', 'D', 'd']
-    os.makedirs(figure_folder_name, exist_ok=True)
-    for name, metric in metrics.items():
-        plt.clf()
-        marker_index = 0
-        max_y = []
-        for alg, agg in metric.items():
-            agg.plot(plt, alg, marker=markers[marker_index], mark_num=10)
-
-            mean, se = agg.get_mean_se()
-            nm = alg+'_'+name
-            output[nm+'_mean'] = mean
-            output[nm+'_se'] = se
-            marker_index += 1
-            max_y.append(np.max(mean+se))
-        if name == "incorrect_frac":
-            if dataset == 'eeg':
-                plt.ylim(0.34, 0.54)
-            elif dataset == 'cardiotocography':
-                plt.ylim(0.0, 1.0 )
-            elif dataset == 'eye_movements':
-                plt.ylim(0.4, 0.8)
-        # get the max mean for the for loop above to set the ylim:
-        if name == "cumregret":
-            print(max_y)
-        if name == "mus" or name == "discrete_alphas":
-            plt.yscale("log")
-        plt.xlabel("Time")
-        plt.ylabel(labels[name])
-
-        plt.legend()
-        figure_file_name = figure_folder_name + f"/{name}" + figure_name_suffix
-        plt.savefig(figure_file_name, dpi = 600)
+def plot_statistics(output_folder_name, output_name, figure_folder_name, mode,  gamma = None):
 
 
 def plot_last_iter( df1, x_name,  y_name, x_axis, y_axis,index_name,  save_path):
@@ -150,7 +117,7 @@ def plot_sample_path( df, x_name,  y_name, x_axis, y_axis,index_name_1, index_na
             plt.savefig(f"{save_path}-{index_name_1}-{str(index_1)}-2.jpg", dpi = 600)
 
 
-def plot_statistics(output_folder_name, output_name, figure_folder_name, mode,  gamma = None):
+def plot_statistics_multi(output_folder_name, output_name, figure_folder_name, mode,  gamma = None):
     #method_list = ['TS-Bayes_errors', 'TS-Bayes_regret','TS-Bayes_cumregret','TS-Bayes_lambda_mins', 'TS-Bayes_lambda_maxs','TS-Bayes_projs_first','TS-Bayes_log_maxs_over_mins', 'TS-Bayes_thinnesses',  'TS-Bayes_lambdas_second', 'TS-Bayes_lambdas_third', 'TS-Bayes_lambdas_d_minus_1', 'TS-Bayes_lambdas_half_d', 'TS-Bayes_biases', 'TS-Bayes_variances','TS-Bayes_risks']+['greedy_errors','greedy_regret','greedy_cumregret','greedy_lambda_mins', 'greedy_lambda_maxs','greedy_projs_first','greedy_log_maxs_over_mins', 'greedy_thinnesses',  'greedy_lambdas_second', 'greedy_lambdas_third', 'greedy_lambdas_d_minus_1', 'greedy_lambdas_half_d', 'greedy_biases', 'greedy_variances','greedy_risks']
     #method_list = ['TS-Bayes_errors', 'TS-Bayes_errors_candidate', 'TS-Bayes_errors_pcandidate', 'TS-Bayes_regret','TS-Bayes_cumregret','TS-Bayes_lambda_mins', 'TS-Bayes_lambda_maxs','TS-Bayes_projs_first', 'TS-Bayes_thinnesses',  ]\
     #+['greedy_errors', 'greedy_errors_candidate', 'greedy_errors_pcandidate','greedy_regret','greedy_cumregret','greedy_lambda_mins', 'greedy_lambda_maxs','greedy_projs_first', 'greedy_thinnesses',]\

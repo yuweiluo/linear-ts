@@ -8,6 +8,16 @@ import matplotlib.pyplot as plt
 
 def plot_last_iter( df1, x_name,  y_name, x_axis, y_axis,index_name,  save_path):
     # plot y of last iteration against x
+    # df1: dataframe
+    # x_name: column name of x
+    # y_name: column name of y
+    # x_axis: label of x axis
+    # y_axis: label of y axis
+    # index_name: column name of index
+    # save_path: path to save the figure
+    
+    markers = ['o', 'v', '^', '<', '>', 's', 'p', '*', 'h', 'H', 'D', 'd']
+    marker_index = 0
     plt.clf()
     index_list = pd.unique(df1[index_name])
     print(index_list)
@@ -21,7 +31,7 @@ def plot_last_iter( df1, x_name,  y_name, x_axis, y_axis,index_name,  save_path)
 
             x = np.array(df2[x_name])
             
-            print(f"index: {index},  x: {x}, y: {mean}, se: {se}")
+            #print(f"index: {index},  x: {x}, y: {mean}, se: {se}")
             
             ################variance
             if x_name == 'prior_sd':
@@ -35,7 +45,7 @@ def plot_last_iter( df1, x_name,  y_name, x_axis, y_axis,index_name,  save_path)
             
 
             plt.fill_between(x, lower, upper, alpha=0.2)
-            plt.plot(x, mean, label=index_name+'='+str(index))
+            plt.plot(x, mean, label=index_name+'='+str(index), marker=markers[marker_index], markevery=50)
 
     
     plt.xlabel(x_axis)
@@ -45,11 +55,11 @@ def plot_last_iter( df1, x_name,  y_name, x_axis, y_axis,index_name,  save_path)
 
 
 
-
 def plot_sample_path( df, x_name,  y_name, x_axis, y_axis,index_name_1, index_name_2,  save_path , gamma = None):
     # plot y along the sample path, for each index_1 index_2 pair
     # one plot per each index_1, multiple index_2 in each plot
-
+    markers = ['o', 'v', '^', '<', '>', 's', 'p', '*', 'h', 'H', 'D', 'd']
+    marker_index = 0
     plt.clf()
 
     index_list_1 = pd.unique(df[index_name_1]) 
@@ -96,11 +106,12 @@ def plot_sample_path( df, x_name,  y_name, x_axis, y_axis,index_name_1, index_na
                     upper = mean + scale * se
 
                     plt.fill_between(x, lower, upper, alpha=0.2)
-                    plt.plot(x, mean, label=index_name_2+'='+str(index_2))
+                    plt.plot(x, mean, label=index_name_2+'='+str(index_2), marker=markers[marker_index], markevery=50)
                     if y_name == 'TS-Bayes_erors' and np.max(mean)>10:
                         plt.ylim(0, 10)
                     if y_name == 'greedy_errors' and np.max(mean)>10:
                         plt.ylim(0, 10)
+                    marker_index += 1
 
 
             plt.xlabel(x_axis)

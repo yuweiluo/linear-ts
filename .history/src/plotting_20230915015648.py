@@ -6,8 +6,46 @@ import sys
 import matplotlib.pyplot as plt
 
 
+def plot_output(metrics, figure_folder_name):
+    markers = [6,4,5,7,'o', 'v', '^', '<', '>', 's', 'p', '*', 'h', 'H', 'D', 'd']
+    
+    for name, metric in metrics.items():
+        plt.clf()
+        marker_index = 0
+        max_y = []
+        for alg, agg in metric.items():
+            agg.plot(plt, alg, marker=markers[marker_index], mark_num=10)
+
+            mean, se = agg.get_mean_se()
+            nm = alg+'_'+name
+            output[nm+'_mean'] = mean
+            output[nm+'_se'] = se
+            marker_index += 1
+            max_y.append(np.max(mean+se))
+        # get the max mean for the for loop above to set the ylim:
+        if name == "cumregret":
+            print(max_y)
+        if name == "mus" or name == "discrete_alphas":
+            plt.yscale("log")
+        plt.xlabel("Time")
+        plt.ylabel(saver.labels[name])
+
+        plt.legend()
+        plt.savefig(f"{figure_folder_name}/k = {k}-{name}-{n}-{d}-{k}-{t}-{sim}-{prior_mu}-{prior_sd}-{noise_sd}-{thin_thresh}-{const_infl}.jpg", dpi = 600)
+
+
 def plot_last_iter( df1, x_name,  y_name, x_axis, y_axis,index_name,  save_path):
     # plot y of last iteration against x
+    # df1: dataframe
+    # x_name: column name of x
+    # y_name: column name of y
+    # x_axis: label of x axis
+    # y_axis: label of y axis
+    # index_name: column name of index
+    # save_path: path to save the figure
+    
+    markers = ['o', 'v', '^', '<', '>', 's', 'p', '*', 'h', 'H', 'D', 'd']
+    marker_index = 0
     plt.clf()
     index_list = pd.unique(df1[index_name])
     print(index_list)
@@ -20,29 +58,22 @@ def plot_last_iter( df1, x_name,  y_name, x_axis, y_axis,index_name,  save_path)
             se = np.array(df2[y_name+'_se'])
 
             x = np.array(df2[x_name])
-            
-            print(f"index: {index},  x: {x}, y: {mean}, se: {se}")
-            
             ################variance
             if x_name == 'prior_sd':
                 x = x**2
             ################
-
             scale = 2.0
             lower = mean - scale * se
             upper = mean + scale * se
 
-            
-
             plt.fill_between(x, lower, upper, alpha=0.2)
-            plt.plot(x, mean, label=index_name+'='+str(index))
+            plt.plot(x, mean, label=index_name+'='+str(index), marker=markers[marker_index], markevery=50)
 
     
     plt.xlabel(x_axis)
     plt.ylabel(y_axis)
     plt.legend(loc = 'best', prop={'size': 6})
     plt.savefig(save_path, dpi = 600)
-
 
 
 
@@ -97,7 +128,7 @@ def plot_sample_path( df, x_name,  y_name, x_axis, y_axis,index_name_1, index_na
                     upper = mean + scale * se
 
                     plt.fill_between(x, lower, upper, alpha=0.2)
-                    plt.plot(x, mean, label=index_name_2+'='+str(index_2), marker=markers(marker_index), markevery=50)
+                    plt.plot(x, mean, label=index_name_2+'='+str(index_2), marker=markers[marker_index], markevery=50)
                     if y_name == 'TS-Bayes_erors' and np.max(mean)>10:
                         plt.ylim(0, 10)
                     if y_name == 'greedy_errors' and np.max(mean)>10:
@@ -111,7 +142,7 @@ def plot_sample_path( df, x_name,  y_name, x_axis, y_axis,index_name_1, index_na
             plt.savefig(f"{save_path}-{index_name_1}-{str(index_1)}-2.jpg", dpi = 600)
 
 
-def plot_statistics(output_folder_name, output_name, figure_folder_name, mode,  gamma = None):
+def plot_statistics_multi(output_folder_name, output_name, figure_folder_name, mode,  gamma = None):
     #method_list = ['TS-Bayes_errors', 'TS-Bayes_regret','TS-Bayes_cumregret','TS-Bayes_lambda_mins', 'TS-Bayes_lambda_maxs','TS-Bayes_projs_first','TS-Bayes_log_maxs_over_mins', 'TS-Bayes_thinnesses',  'TS-Bayes_lambdas_second', 'TS-Bayes_lambdas_third', 'TS-Bayes_lambdas_d_minus_1', 'TS-Bayes_lambdas_half_d', 'TS-Bayes_biases', 'TS-Bayes_variances','TS-Bayes_risks']+['greedy_errors','greedy_regret','greedy_cumregret','greedy_lambda_mins', 'greedy_lambda_maxs','greedy_projs_first','greedy_log_maxs_over_mins', 'greedy_thinnesses',  'greedy_lambdas_second', 'greedy_lambdas_third', 'greedy_lambdas_d_minus_1', 'greedy_lambdas_half_d', 'greedy_biases', 'greedy_variances','greedy_risks']
     #method_list = ['TS-Bayes_errors', 'TS-Bayes_errors_candidate', 'TS-Bayes_errors_pcandidate', 'TS-Bayes_regret','TS-Bayes_cumregret','TS-Bayes_lambda_mins', 'TS-Bayes_lambda_maxs','TS-Bayes_projs_first', 'TS-Bayes_thinnesses',  ]\
     #+['greedy_errors', 'greedy_errors_candidate', 'greedy_errors_pcandidate','greedy_regret','greedy_cumregret','greedy_lambda_mins', 'greedy_lambda_maxs','greedy_projs_first', 'greedy_thinnesses',]\
