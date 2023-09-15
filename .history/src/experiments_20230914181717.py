@@ -125,7 +125,6 @@ def run_experiments_d(
             
             figure_folder_name = f"figures/figures-{output_name}"
             os.makedirs(figure_folder_name, exist_ok=True)
-            
             markers = [6,4,5,7,'o', 'v', '^', '<', '>', 's', 'p', '*', 'h', 'H', 'D', 'd']
             
             for name, metric in metrics.items():
@@ -189,7 +188,7 @@ def run_experiments_d(
             if name == 'errors':
                 plt.axhline(y=predicted_risk_[2], linestyle= '--', color='red', label='Predicted Risk')
         plt.xlabel("d")
-        plt.ylabel(saver.labels[name])
+        plt.ylabel(labels[name])
 
         plt.legend()
         plt.savefig(

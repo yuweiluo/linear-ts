@@ -5,8 +5,6 @@ import pandas as pd
 import time
 from contextlib import contextmanager
 from statsmodels.distributions.empirical_distribution import ECDF
-from collections import defaultdict
-import os
 
 def timing(func):
     def outer(*args, **kwargs):
@@ -300,12 +298,37 @@ class MetricAggregator:
 
 
 
-class save_results:
+class save_results(results, save_path):
     def __init__(self):
-        self.outputs = []
-        self.outputs_last = []
-        
+        self.regrets = defaultdict(MetricAggregator)
+        #self.o_regrets = defaultdict(MetricAggregator)
+        self.cumregrets = defaultdict(MetricAggregator)
+        #self.o_cumregrets = defaultdict(MetricAggregator)
+        self.thinnesses = defaultdict(MetricAggregator)
+        self.errors = defaultdict(MetricAggregator)
+        #self.errors_candidate = defaultdict(MetricAggregator)
+        #self.errors_pcandidate = defaultdict(MetricAggregator)
+        self.lambda_maxs = defaultdict(MetricAggregator)
+        self.lambda_mins = defaultdict(MetricAggregator)
+        self.lambda_maxs_over_mins = defaultdict(MetricAggregator)
+        self.worst_alphas = defaultdict(MetricAggregator)
+        self.approx_alphas = defaultdict(MetricAggregator)
+        self.discrete_alphas = defaultdict(MetricAggregator)
+        self.mus = defaultdict(MetricAggregator)
+        self.cumumus = defaultdict(MetricAggregator)
+        self.betas = defaultdict(MetricAggregator)
+        self.betas_TS = defaultdict(MetricAggregator)
+        self.zetas = defaultdict(MetricAggregator)
+        #self.log_maxs_over_mins = defaultdict(MetricAggregator)
+        #self.lambdas_second= defaultdict(MetricAggregator)
+        #self.lambdas_third = defaultdict(MetricAggregator)
+        #self.lambdas_d_minus_1 = defaultdict(MetricAggregator)
+        #self.lambdas_half_d = defaultdict(MetricAggregator)
+        self.projs_first = defaultdict(MetricAggregator)
 
+        #self.biases = defaultdict(MetricAggregator)
+        #self.variances = defaultdict(MetricAggregator)
+        #self.risks = defaultdict(MetricAggregator)
         
         self.labels = {"o_regret":"Oracle Instantaneous Regret",  
         "o_cumregret": "Oracle Cumulative Regret",
@@ -336,42 +359,8 @@ class save_results:
         "cumumus": "$\\left(\sum_{t=1}^T\mu_t^2 \\right )^{1/2}$", 
         "discrete_alphas": "$\hat{\\alpha}_t$"
         }
-        
-    def init_outputs(self, d, k):
-        self.d = d
-        self.k = k
-        
-        self.regrets = defaultdict(MetricAggregator)
-        #self.o_regrets = defaultdict(MetricAggregator)
-        self.cumregrets = defaultdict(MetricAggregator)
-        #self.o_cumregrets = defaultdict(MetricAggregator)
-        self.thinnesses = defaultdict(MetricAggregator)
-        self.errors = defaultdict(MetricAggregator)
-        #self.errors_candidate = defaultdict(MetricAggregator)
-        #self.errors_pcandidate = defaultdict(MetricAggregator)
-        self.lambda_maxs = defaultdict(MetricAggregator)
-        self.lambda_mins = defaultdict(MetricAggregator)
-        self.lambda_maxs_over_mins = defaultdict(MetricAggregator)
-        self.worst_alphas = defaultdict(MetricAggregator)
-        self.approx_alphas = defaultdict(MetricAggregator)
-        self.discrete_alphas = defaultdict(MetricAggregator)
-        self.mus = defaultdict(MetricAggregator)
-        self.cumumus = defaultdict(MetricAggregator)
-        self.betas = defaultdict(MetricAggregator)
-        self.betas_TS = defaultdict(MetricAggregator)
-        self.zetas = defaultdict(MetricAggregator)
-        #self.log_maxs_over_mins = defaultdict(MetricAggregator)
-        #self.lambdas_second= defaultdict(MetricAggregator)
-        #self.lambdas_third = defaultdict(MetricAggregator)
-        #self.lambdas_d_minus_1 = defaultdict(MetricAggregator)
-        #self.lambdas_half_d = defaultdict(MetricAggregator)
-        self.projs_first = defaultdict(MetricAggregator)
 
-        #self.biases = defaultdict(MetricAggregator)
-        #self.variances = defaultdict(MetricAggregator)
-        #self.risks = defaultdict(MetricAggregator)
-
-    def aggregate_metrics(self, results):
+    def aggregate(self, results):
         for name, ( approx_alpha, mu, worst_alpha, regret, thinness, error, lambda_max, lambda_min, proj_first,beta,beta_TS,discrete_alpha) in results.items():
             #self.o_regrets[name].aggregate(o_rerget)
             #self.o_cumregrets[name].aggregate(np.cumsum(o_rerget))
@@ -405,7 +394,7 @@ class save_results:
             #self.risks[name].aggregate(risk)
             self.projs_first[name].aggregate(proj_first)
 
-    def aggregate_output(self):
+    def get_metrics(self):
         self.metrics = {
             #'o_regret': o_regrets,
             #'o_cumregret': o_cumregrets,
@@ -437,44 +426,8 @@ class save_results:
             "betas_TS": self.betas_TS,
             "discrete_alphas": self.discrete_alphas,
         }
+        return self.metrics
 
-        output = pd.DataFrame()
-        output_last = pd.DataFrame()
-        for name, metric in self.metrics.items():
-            for alg, agg in metric.items():
-                #agg.plot(plt, alg)
-
-                mean, se = agg.get_mean_se()
-                nm = alg+'_'+name
-                output['d'] = self.d
-                output['k'] = self.k
-                output[nm+'_mean'] = mean
-                output[nm+'_se'] = se
-
-                output_last['d'] = self.d
-                output_last['k'] = self.k
-                output_last[nm+'_mean'] = [mean[-1]]
-                output_last[nm+'_se'] = [se[-1]]
-
-        self.outputs.extend([output])
-        self.outputs_last.extend([output_last])
-        
-        return self.metrics, output, output_last
-
-    def save_outputs(self, output_folder_name, output_name):
-        os.makedirs(output_folder_name, exist_ok=True)
-        
-
-        
-        outputs = pd.concat(self.outputs)
-        outputs_last = pd.concat(self.outputs_last)
-
-
-        
-        outputs.to_csv(f"{output_folder_name}/all-{output_name}.csv", index=False)
-        outputs_last.to_csv(f"{output_folder_name}/all-last-{output_name}.csv", index=False)
-        return outputs, outputs_last
-        
 
 
 class StateFactory:

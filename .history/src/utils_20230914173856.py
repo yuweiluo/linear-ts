@@ -6,7 +6,6 @@ import time
 from contextlib import contextmanager
 from statsmodels.distributions.empirical_distribution import ECDF
 from collections import defaultdict
-import os
 
 def timing(func):
     def outer(*args, **kwargs):
@@ -301,45 +300,9 @@ class MetricAggregator:
 
 
 class save_results:
-    def __init__(self):
-        self.outputs = []
-        self.outputs_last = []
-        
-
-        
-        self.labels = {"o_regret":"Oracle Instantaneous Regret",  
-        "o_cumregret": "Oracle Cumulative Regret",
-        "regret": "Instantaneous Regret", 
-        "cumregret": "Cumulative Regret", 
-        "thinnesses": "Thinness", 
-        "errors": "Normalized Error", 
-        "lambda_maxs": "Maximal Eigenvalues", 
-        "lambda_mins": "Minimal Eigenvalues", 
-        "log_maxs_over_mins": "Log Max / Min", 
-        "lambdas_second": "Second Largest Eigenvalues", 
-        "lambdas_third": "Third Largest Eigenvalues", 
-        "biases": "Biases", "variances": "Variances", 
-        "risks": "Risks", 
-        "lambdas_d_minus_1": "d-1 Largest Eigenvalues", 
-        "lambdas_half_d": "d/2 Largest Eigenvalues", 
-        "projs_first": "$\zeta_t$", 
-        "errors_candidate": "Normalized Error of Candidate", 
-        "errors_pcandidate": "Normalized Error of P-Candidate", 
-        "worst_alphas": "Worst Alpha", 
-        "betas": "Beta", 
-        "zetas": "Zeta", 
-        "lambda_maxs_over_mins": "Max / Min", 
-        "approx_alphas": "$\hat{\\alpha}_t$", 
-        "oracle_alphas": "Oracle Alphas", 
-        "betas_TS": "Beta TS", 
-        "mus": "$\mu_t$", 
-        "cumumus": "$\\left(\sum_{t=1}^T\mu_t^2 \\right )^{1/2}$", 
-        "discrete_alphas": "$\hat{\\alpha}_t$"
-        }
-        
-    def init_outputs(self, d, k):
-        self.d = d
-        self.k = k
+    def __init__(self,save_path):
+        outputs = []
+        outputs_last = []
         
         self.regrets = defaultdict(MetricAggregator)
         #self.o_regrets = defaultdict(MetricAggregator)
@@ -370,6 +333,36 @@ class save_results:
         #self.biases = defaultdict(MetricAggregator)
         #self.variances = defaultdict(MetricAggregator)
         #self.risks = defaultdict(MetricAggregator)
+        
+        self.labels = {"o_regret":"Oracle Instantaneous Regret",  
+        "o_cumregret": "Oracle Cumulative Regret",
+        "regret": "Instantaneous Regret", 
+        "cumregret": "Cumulative Regret", 
+        "thinnesses": "Thinness", 
+        "errors": "Normalized Error", 
+        "lambda_maxs": "Maximal Eigenvalues", 
+        "lambda_mins": "Minimal Eigenvalues", 
+        "log_maxs_over_mins": "Log Max / Min", 
+        "lambdas_second": "Second Largest Eigenvalues", 
+        "lambdas_third": "Third Largest Eigenvalues", 
+        "biases": "Biases", "variances": "Variances", 
+        "risks": "Risks", 
+        "lambdas_d_minus_1": "d-1 Largest Eigenvalues", 
+        "lambdas_half_d": "d/2 Largest Eigenvalues", 
+        "projs_first": "$\zeta_t$", 
+        "errors_candidate": "Normalized Error of Candidate", 
+        "errors_pcandidate": "Normalized Error of P-Candidate", 
+        "worst_alphas": "Worst Alpha", 
+        "betas": "Beta", 
+        "zetas": "Zeta", 
+        "lambda_maxs_over_mins": "Max / Min", 
+        "approx_alphas": "$\hat{\\alpha}_t$", 
+        "oracle_alphas": "Oracle Alphas", 
+        "betas_TS": "Beta TS", 
+        "mus": "$\mu_t$", 
+        "cumumus": "$\\left(\sum_{t=1}^T\mu_t^2 \\right )^{1/2}$", 
+        "discrete_alphas": "$\hat{\\alpha}_t$"
+        }
 
     def aggregate_metrics(self, results):
         for name, ( approx_alpha, mu, worst_alpha, regret, thinness, error, lambda_max, lambda_min, proj_first,beta,beta_TS,discrete_alpha) in results.items():
@@ -405,7 +398,7 @@ class save_results:
             #self.risks[name].aggregate(risk)
             self.projs_first[name].aggregate(proj_first)
 
-    def aggregate_output(self):
+    def aggregate_outputs(self):
         self.metrics = {
             #'o_regret': o_regrets,
             #'o_cumregret': o_cumregrets,
@@ -446,34 +439,24 @@ class save_results:
 
                 mean, se = agg.get_mean_se()
                 nm = alg+'_'+name
-                output['d'] = self.d
-                output['k'] = self.k
+                output['d'] = d
+                output['k'] = k
                 output[nm+'_mean'] = mean
                 output[nm+'_se'] = se
 
-                output_last['d'] = self.d
-                output_last['k'] = self.k
+                output_last['d'] = d
+                output_last['k'] = k
                 output_last[nm+'_mean'] = [mean[-1]]
                 output_last[nm+'_se'] = [se[-1]]
 
-        self.outputs.extend([output])
-        self.outputs_last.extend([output_last])
-        
-        return self.metrics, output, output_last
+        outputs.extend([output])
+        outputs_last.extend([output_last])
 
-    def save_outputs(self, output_folder_name, output_name):
+
         os.makedirs(output_folder_name, exist_ok=True)
-        
-
-        
-        outputs = pd.concat(self.outputs)
-        outputs_last = pd.concat(self.outputs_last)
-
-
-        
-        outputs.to_csv(f"{output_folder_name}/all-{output_name}.csv", index=False)
-        outputs_last.to_csv(f"{output_folder_name}/all-last-{output_name}.csv", index=False)
-        return outputs, outputs_last
+        figure_folder_name = f"figures/figures-{output_name}"
+        os.makedirs(figure_folder_name, exist_ok=True)
+        output = pd.DataFrame()
         
 
 

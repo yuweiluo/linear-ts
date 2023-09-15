@@ -60,7 +60,7 @@ def run_experiments_d(
 
         for k in k_list:
 
-            saver.init_outputs(d = d, k = k)
+
 
             for i in range(n):
                 print(f"Running experiment {i} for dim {d} and k {k}...")
@@ -117,14 +117,15 @@ def run_experiments_d(
                             radius = radius,
                             alpha = alpha)
                         
-                
                 saver.aggregate_metrics(results)
 
-            metrics, output, output_last = saver.aggregate_output()
-            outputs, outputs_last = saver.save_outputs(output_folder_name,output_name)
+
+
+            saver.aggregate_output(output_folder_name,output_name)
             
-            figure_folder_name = f"figures/figures-{output_name}"
-            os.makedirs(figure_folder_name, exist_ok=True)
+            metrics, output, output_last = saver.aggregate_output()
+            
+            saver.save_outputs()
             
             markers = [6,4,5,7,'o', 'v', '^', '<', '>', 's', 'p', '*', 'h', 'H', 'D', 'd']
             
@@ -147,7 +148,7 @@ def run_experiments_d(
                 if name == "mus" or name == "discrete_alphas":
                     plt.yscale("log")
                 plt.xlabel("Time")
-                plt.ylabel(saver.labels[name])
+                plt.ylabel(labels[name])
 
                 plt.legend()
                 plt.savefig(f"{figure_folder_name}/k = {k}-{name}-{n}-{d}-{k}-{t}-{sim}-{prior_mu}-{prior_sd}-{noise_sd}-{thin_thresh}-{const_infl}.jpg", dpi = 600)
@@ -189,7 +190,7 @@ def run_experiments_d(
             if name == 'errors':
                 plt.axhline(y=predicted_risk_[2], linestyle= '--', color='red', label='Predicted Risk')
         plt.xlabel("d")
-        plt.ylabel(saver.labels[name])
+        plt.ylabel(labels[name])
 
         plt.legend()
         plt.savefig(

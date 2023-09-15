@@ -301,7 +301,7 @@ class MetricAggregator:
 
 
 class save_results:
-    def __init__(self):
+    def __init__(self,save_path):
         self.outputs = []
         self.outputs_last = []
         
@@ -336,7 +336,6 @@ class save_results:
         "cumumus": "$\\left(\sum_{t=1}^T\mu_t^2 \\right )^{1/2}$", 
         "discrete_alphas": "$\hat{\\alpha}_t$"
         }
-        
     def init_outputs(self, d, k):
         self.d = d
         self.k = k
@@ -405,7 +404,7 @@ class save_results:
             #self.risks[name].aggregate(risk)
             self.projs_first[name].aggregate(proj_first)
 
-    def aggregate_output(self):
+    def aggregate_outputs(self):
         self.metrics = {
             #'o_regret': o_regrets,
             #'o_cumregret': o_cumregrets,
@@ -451,29 +450,19 @@ class save_results:
                 output[nm+'_mean'] = mean
                 output[nm+'_se'] = se
 
-                output_last['d'] = self.d
-                output_last['k'] = self.k
+                output_last['d'] = d
+                output_last['k'] = k
                 output_last[nm+'_mean'] = [mean[-1]]
                 output_last[nm+'_se'] = [se[-1]]
 
         self.outputs.extend([output])
         self.outputs_last.extend([output_last])
-        
-        return self.metrics, output, output_last
 
     def save_outputs(self, output_folder_name, output_name):
         os.makedirs(output_folder_name, exist_ok=True)
-        
-
-        
-        outputs = pd.concat(self.outputs)
-        outputs_last = pd.concat(self.outputs_last)
-
-
-        
-        outputs.to_csv(f"{output_folder_name}/all-{output_name}.csv", index=False)
-        outputs_last.to_csv(f"{output_folder_name}/all-last-{output_name}.csv", index=False)
-        return outputs, outputs_last
+        figure_folder_name = f"figures/figures-{output_name}"
+        os.makedirs(figure_folder_name, exist_ok=True)
+        output = pd.DataFrame()
         
 
 

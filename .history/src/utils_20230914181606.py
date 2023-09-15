@@ -463,7 +463,7 @@ class save_results:
 
     def save_outputs(self, output_folder_name, output_name):
         os.makedirs(output_folder_name, exist_ok=True)
-        
+        os.makedirs(figure_folder_name, exist_ok=True)
 
         
         outputs = pd.concat(self.outputs)

@@ -60,7 +60,7 @@ def run_experiments_d(
 
         for k in k_list:
 
-            saver.init_outputs(d = d, k = k)
+
 
             for i in range(n):
                 print(f"Running experiment {i} for dim {d} and k {k}...")
@@ -117,15 +117,40 @@ def run_experiments_d(
                             radius = radius,
                             alpha = alpha)
                         
-                
                 saver.aggregate_metrics(results)
 
-            metrics, output, output_last = saver.aggregate_output()
-            outputs, outputs_last = saver.save_outputs(output_folder_name,output_name)
-            
+
+
+            saver.aggregate_output()
+            output = pd.DataFrame()
+            output_last = pd.DataFrame()
+            for name, metric in metrics.items():
+                # plt.clf()
+                for alg, agg in metric.items():
+                    #agg.plot(plt, alg)
+
+                    mean, se = agg.get_mean_se()
+                    nm = alg+'_'+name
+                    output['d'] = d
+                    output['k'] = k
+                    output[nm+'_mean'] = mean
+                    output[nm+'_se'] = se
+
+                    output_last['d'] = d
+                    output_last['k'] = k
+                    output_last[nm+'_mean'] = [mean[-1]]
+                    output_last[nm+'_se'] = [se[-1]]
+
+            outputs.extend([output])
+            outputs_last.extend([output_last])
+
+
+            os.makedirs(output_folder_name, exist_ok=True)
             figure_folder_name = f"figures/figures-{output_name}"
             os.makedirs(figure_folder_name, exist_ok=True)
+            output = pd.DataFrame()
             
+            output, output_last = saver.aggregate_output()
             markers = [6,4,5,7,'o', 'v', '^', '<', '>', 's', 'p', '*', 'h', 'H', 'D', 'd']
             
             for name, metric in metrics.items():
@@ -147,12 +172,19 @@ def run_experiments_d(
                 if name == "mus" or name == "discrete_alphas":
                     plt.yscale("log")
                 plt.xlabel("Time")
-                plt.ylabel(saver.labels[name])
+                plt.ylabel(labels[name])
 
                 plt.legend()
                 plt.savefig(f"{figure_folder_name}/k = {k}-{name}-{n}-{d}-{k}-{t}-{sim}-{prior_mu}-{prior_sd}-{noise_sd}-{thin_thresh}-{const_infl}.jpg", dpi = 600)
                 #output.to_csv(f"{figure_folder_name}/k = {k}{name}-{n}-{d}-{k}-{t}-{sim}-{prior_mu}-{prior_sd}-{noise_sd}-{thin_thresh}-{const_infl}.csv", index=False)
 
+    outputs = pd.concat(outputs)
+    outputs_last = pd.concat(outputs_last)
+
+
+    
+    outputs.to_csv(f"{output_folder_name}/all-{output_name}.csv", index=False)
+    outputs_last.to_csv(f"{output_folder_name}/all-last-{output_name}.csv", index=False)
 
 
 # plot statistics for multiple d in one figure
@@ -189,7 +221,7 @@ def run_experiments_d(
             if name == 'errors':
                 plt.axhline(y=predicted_risk_[2], linestyle= '--', color='red', label='Predicted Risk')
         plt.xlabel("d")
-        plt.ylabel(saver.labels[name])
+        plt.ylabel(labels[name])
 
         plt.legend()
         plt.savefig(
@@ -255,5 +287,3 @@ if __name__ == "__main__":
 # PYTHONPATH=src python -m experiments -sim 5 -k 0 -para_min 50 -para_max 50 -para_gap 20 -pm 0 -nsd 1 -n 20 -mode "d" -gamma 0.02 -psd 10 -radius 10 -s 1 -alpha 8.0
 
 # PYTHONPATH=src python -m experiments -sim 0 -k 0 -para_min 50 -para_max 50 -para_gap 20 -pm 0 -nsd 1 -n 20 -mode "d" -gamma 0.02 -psd 10 -radius 10 -s 1 -alpha 12.0
-
-# PYTHONPATH=src python -m experiments -sim 0 -k 0 -para_min 5 -para_max 5 -para_gap 5 -pm 0 -nsd 1 -n 3 -mode "d" -gamma 0.02 -psd 10 -radius 10 -s 1 -alpha 12.0

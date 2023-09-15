@@ -189,7 +189,7 @@ def run_experiments_d(
             if name == 'errors':
                 plt.axhline(y=predicted_risk_[2], linestyle= '--', color='red', label='Predicted Risk')
         plt.xlabel("d")
-        plt.ylabel(saver.labels[name])
+        plt.ylabel(labels[name])
 
         plt.legend()
         plt.savefig(

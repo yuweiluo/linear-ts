@@ -1,18 +1,3 @@
-import numpy as np
-
-from envs import Environment
-from envs import NoiseGenerator
-from envs import StochasticContextGenerator as CtxGenerator
-from envs import GroupedStochasticContextGenerator as GroupedCtxGenerator
-from envs import Example2ContextGenerator as Ex2CtxGenerator
-from envs import Example1ContextGenerator as Ex1CtxGenerator
-from envs import Context
-
-from policies import Roful
-from utils import timing_block
-
-
-
 import argparse
 
 from collections import defaultdict
@@ -47,10 +32,7 @@ def run_experiments_d(
     sim=0,
     gamma=1,
     radius=1.0,
-    alpha = 0.5,
-    mu_TS = 10.0,
-    mu_Greedy = 12.0,
-    dataset = 'eeg'
+    alpha = 0.5
 ):
     state_factory = StateFactory(s)
 
@@ -59,21 +41,21 @@ def run_experiments_d(
     #k_list = np.array([1, 3, 10, 50, 100])
     #k_list = np.array([1,10,100])
     #k_list = np.array([0])
-    k_list = np.array([2])
+    k_list = np.array([100])
     #k_list = np.array([np.inf])
-
+    saver = save_results()
     outputs = []
     outputs_last = []
 
     timestr = time.strftime("%Y%m%d-%H%M%S")
-    output_name = f"dims-{d_min}-{d_max}-{d_gap}-gamma-{gamma}-radius-{radius}-prior_sd-{prior_sd}-noise_sd-{noise_sd}-sim-{sim}-k-{k}-t-{t}-prior_mu-{prior_mu}-thin_thresh-{thin_thresh}-const_infl-{const_infl}-n-{n}-time-{timestr}-mu_TS-{mu_TS} -mu_Greedy-{mu_Greedy}-dataset-{dataset}"
+    output_name = f"dims-{d_min}-{d_max}-{d_gap}-gamma-{gamma}-radius-{radius}-prior_sd-{prior_sd}-noise_sd-{noise_sd}-sim-{sim}-k-{k}-t-{t}-prior_mu-{prior_mu}-thin_thresh-{thin_thresh}-const_infl-{const_infl}-n-{n}-time-{timestr}-alpha-{alpha}"
 
     output_folder_name = 'my_outputs'
 
 
     for d in d_list:
 
-        t = np.int64(np.ceil(d/gamma))  # mark
+        t = np.int64(np.ceil(d/gamma))  # FIXME
 
         predicted_risk_ = predicted_risk(gamma, radius, noise_sd)
 
@@ -81,8 +63,8 @@ def run_experiments_d(
 
             regrets = defaultdict(MetricAggregator)
             o_regrets = defaultdict(MetricAggregator)
-            cumuregrets = defaultdict(MetricAggregator)
-            o_cumuregrets = defaultdict(MetricAggregator)
+            cumregrets = defaultdict(MetricAggregator)
+            o_cumregrets = defaultdict(MetricAggregator)
             thinnesses = defaultdict(MetricAggregator)
             errors = defaultdict(MetricAggregator)
             errors_candidate = defaultdict(MetricAggregator)
@@ -104,7 +86,6 @@ def run_experiments_d(
             lambdas_d_minus_1 = defaultdict(MetricAggregator)
             lambdas_half_d = defaultdict(MetricAggregator)
             projs_first = defaultdict(MetricAggregator)
-            incorrect_frac = defaultdict(MetricAggregator)
 
             biases = defaultdict(MetricAggregator)
             variances = defaultdict(MetricAggregator)
@@ -153,20 +134,6 @@ def run_experiments_d(
                         const_infl=const_infl,
                         g= 1,
                         alpha = alpha)
-                elif sim ==5:  # classification problems
-                    
-                    print('run_classification_problems')
-                    results = emp_scenario(
-                        d=d, k=2, t=t, state_factory=state_factory,
-                        prior_var=prior_sd **2 ,
-                        noise_sd=noise_sd,
-                        thin_thresh=thin_thresh,
-                        const_infl=const_infl,
-                        radius = radius,
-                        alpha = alpha,
-                        mu_TS = mu_TS,
-                        mu_Greedy = mu_Greedy,
-                        dataset = dataset)
                 elif sim ==0:  # Run Russo Scenario
                         print('Run Russo Scenario')
                         results = russo_scenario(
@@ -182,10 +149,9 @@ def run_experiments_d(
                 #for name, (regret, thinness, error, lambda_max, lambda_min, lambda_second, lambda_third, bias, variance, risk, lambda_d_minus_1, lambda_half_d, proj_first, error_candidate, error_pcandidate) in results.items():
                 for name, ( approx_alpha, mu, worst_alpha, regret, thinness, error, lambda_max, lambda_min, proj_first,beta,beta_TS,discrete_alpha) in results.items():
                     #o_regrets[name].aggregate(o_rerget)
-                    #o_cumuregrets[name].aggregate(np.cumsum(o_rerget))
+                    #o_cumregrets[name].aggregate(np.cumsum(o_rerget))
                     regrets[name].aggregate(regret)
-                    cumuregrets[name].aggregate(np.cumsum(regret))
-                    incorrect_frac[name].aggregate(np.cumsum(regret)/np.arange(1, t + 1))
+                    cumregrets[name].aggregate(np.cumsum(regret))
                     # [name].aggregate(regret[-1])
                     thinnesses[name].aggregate(thinness)
                     worst_alphas[name].aggregate(worst_alpha)
@@ -210,7 +176,6 @@ def run_experiments_d(
                     #lambdas_third[name].aggregate(lambda_third)
                     #lambdas_d_minus_1[name].aggregate(lambda_d_minus_1)
                     #lambdas_half_d[name].aggregate(lambda_half_d)
-                    # print(f"bias: {bias}, {type(bias)}, d: {d}, {type(d)}")
                     #biases[name].aggregate(bias)
                     #variances[name].aggregate(variance)
                     #risks[name].aggregate(risk)
@@ -218,10 +183,9 @@ def run_experiments_d(
 
             metrics = {
                 #'o_regret': o_regrets,
-                #'o_cumuregret': o_cumuregrets,
+                #'o_cumregret': o_cumregrets,
                 "regret": regrets,
-                "cumuregret": cumuregrets,
-                "incorrect_frac":incorrect_frac,
+                "cumregret": cumregrets,
                 "thinnesses": thinnesses,
                 "errors": errors,
                 "lambda_maxs": lambda_maxs,
@@ -249,7 +213,35 @@ def run_experiments_d(
                 "discrete_alphas": discrete_alphas,
             }
 
-            labels = {"o_regret":"Oracle Instantaneous Regret",  "o_cumuregret": "Oracle Cumulative Regret","regret": "Instantaneous Regret", "cumuregret": "Cumulative Regret", "thinnesses": "Thinness", "errors": "Normalized Error", "lambda_maxs": "Maximal Eigenvalues", "lambda_mins": "Minimal Eigenvalues", "log_maxs_over_mins": "Log Max / Min", "lambdas_second": "Second Largest Eigenvalues", "lambdas_third": "Third Largest Eigenvalues", "biases": "Biases", "variances": "Variances", "risks": "Risks", "lambdas_d_minus_1": "d-1 Largest Eigenvalues", "lambdas_half_d": "d/2 Largest Eigenvalues", "projs_first": "$\\frac{\|\|\hat{\Theta}_{t-1}\|\|_{V_{t-1}}^2/\|\|\hat{\Theta}_{t-1}\|\|^2}{\lambda_{\max}(V_{t-1})} $", "errors_candidate": "Normalized Error of Candidate", "errors_pcandidate": "Normalized Error of P-Candidate", "worst_alphas": "Worst Alpha", "betas": "Beta", "zetas": "Zeta", "lambda_maxs_over_mins": "Max / Min", "approx_alphas": "$\hat{\\alpha}_t$", "oracle_alphas": "Oracle Alphas", "betas_TS": "Beta TS", "mus": "$\mu_t$", "cumumus": "$\\left(\sum_{t=1}^T\mu_t^2 \\right )^{1/2}$", "discrete_alphas": "$\hat{\\alpha}_t$", "incorrect_frac": "Fraction of incorrect decisions"}
+            labels = {"o_regret":"Oracle Instantaneous Regret",  
+                "o_cumregret": "Oracle Cumulative Regret",
+                "regret": "Instantaneous Regret", 
+                "cumregret": "Cumulative Regret", 
+                "thinnesses": "Thinness", 
+                "errors": "Normalized Error", 
+                "lambda_maxs": "Maximal Eigenvalues", 
+                "lambda_mins": "Minimal Eigenvalues", 
+                "log_maxs_over_mins": "Log Max / Min", 
+                "lambdas_second": "Second Largest Eigenvalues", 
+                "lambdas_third": "Third Largest Eigenvalues", 
+                "biases": "Biases", "variances": "Variances", 
+                "risks": "Risks", 
+                "lambdas_d_minus_1": "d-1 Largest Eigenvalues", 
+                "lambdas_half_d": "d/2 Largest Eigenvalues", 
+                "projs_first": "$\zeta_t$", 
+                "errors_candidate": "Normalized Error of Candidate", 
+                "errors_pcandidate": "Normalized Error of P-Candidate", 
+                "worst_alphas": "Worst Alpha", 
+                "betas": "Beta", 
+                "zetas": "Zeta", 
+                "lambda_maxs_over_mins": "Max / Min", 
+                "approx_alphas": "$\hat{\\alpha}_t$", 
+                "oracle_alphas": "Oracle Alphas", 
+                "betas_TS": "Beta TS", 
+                "mus": "$\mu_t$", 
+                "cumumus": "$\\left(\sum_{t=1}^T\mu_t^2 \\right )^{1/2}$", 
+                "discrete_alphas": "$\hat{\\alpha}_t$"
+                }
 
 
             output = pd.DataFrame()
@@ -297,14 +289,7 @@ def run_experiments_d(
                     marker_index += 1
                     max_y.append(np.max(mean+se))
                 # get the max mean for the for loop above to set the ylim:
-                if name == "incorrect_frac":
-                    if dataset == 'eeg':
-                        plt.ylim(0.34, 0.54)
-                    elif dataset == 'cardiotocography':
-                        plt.ylim(0.0, 1.0 )
-                    elif dataset == 'eye_movements':
-                        plt.ylim(0.4, 0.8)
-                if name == "cumuregret":
+                if name == "cumregret":
                     print(max_y)
                 if name == "mus" or name == "discrete_alphas":
                     plt.yscale("log")
@@ -394,16 +379,13 @@ def __main__():
     parser.add_argument("-gamma", type=np.float64, help="ratio", default=0.1)
     parser.add_argument("-mode", type=str, help="mode", default="d")
     parser.add_argument("-radius", type=np.float64, help="norm of beta", default=1.0)
-    parser.add_argument("-mu_TS", type=np.float64, help="ratio threshold for TS", default=10.0)
-    parser.add_argument("-mu_Greedy", type=np.float64, help="ratio threshold for Greedy", default=12.0)
-    parser.add_argument("-alpha", type=np.float64, help="placeholder", default=0.0)
-    parser.add_argument("-dataset", type=str, help="dataset name", default="EEG")
+    parser.add_argument("-alpha", type=np.float64, help="ratio threshold", default=0.5)
     args = parser.parse_args()
     '''
 
     '''
     if args.mode == 'd':
-        run_experiments_d(n=args.n, d_min=args.para_min, d_max=args.para_max, d_gap=args.para_gap, k=args.k, t=args.t, s=args.s, prior_mu=args.pm, prior_sd=args.psd, noise_sd=args.nsd, thin_thresh=args.th, const_infl=args.inf, sim=args.sim, gamma=args.gamma, radius = args.radius, alpha = args.alpha, mu_TS =args.mu_TS, mu_Greedy =args.mu_Greedy, dataset = args.dataset)
+        run_experiments_d(n=args.n, d_min=args.para_min, d_max=args.para_max, d_gap=args.para_gap, k=args.k, t=args.t, s=args.s, prior_mu=args.pm, prior_sd=args.psd, noise_sd=args.nsd, thin_thresh=args.th, const_infl=args.inf, sim=args.sim, gamma=args.gamma, radius = args.radius, alpha = args.alpha)
 
 
 
@@ -417,12 +399,13 @@ if __name__ == "__main__":
 
 
 
+## Jun 23
+# PYTHONPATH=src python -m experiments -sim 0 -k 0 -para_min 50 -para_max 50 -para_gap 20 -pm 0 -nsd 1 -n 20 -mode "d" -gamma 0.02 -psd 10 -radius 10 -s 1 -alpha 8.0
 
+# PYTHONPATH=src python -m experiments -sim 4 -k 0 -para_min 50 -para_max 50 -para_gap 20 -pm 0 -nsd 1 -n 20 -mode "d" -gamma 0.02 -psd 10 -radius 10 -s 1 -alpha 12.0
 
-# PYTHONPATH=src python -m emp1 -sim 5 -k 0 -para_min 150 -para_max 150 -para_gap 20 -pm 0 -nsd 0.2 -n 1 -mode "d" -gamma 0.1 -psd 0.001 -radius 5 -s 1 -alpha 0.0 -dataset 'cardiotocography'
+# PYTHONPATH=src python -m experiments -sim 2 -k 3 -para_min 50 -para_max 50 -para_gap 20 -pm 10 -nsd 1 -n 20 -mode "d" -gamma 0.1 -psd 1 -radius 1 -s 1 -alpha 8.0
 
-# PYTHONPATH=src python -m emp1 -sim 5 -k 0 -para_min 1450 -para_max 1450 -para_gap 20 -pm 0 -nsd 0.2 -n 20 -mode "d" -gamma 0.1 -psd 0.001 -radius 5 -s 1 -alpha 0.0 -dataset 'eeg'
+# PYTHONPATH=src python -m experiments -sim 5 -k 0 -para_min 50 -para_max 50 -para_gap 20 -pm 0 -nsd 1 -n 20 -mode "d" -gamma 0.02 -psd 10 -radius 10 -s 1 -alpha 8.0
 
-# PYTHONPATH=src python -m emp1 -sim 5 -k 0 -para_min 1000 -para_max 1000 -para_gap 20 -pm 0 -nsd 0.1 -n 1 -mode "d" -gamma 0.1 -psd 0.001 -radius 5 -s 1 -alpha 8.0 -dataset 'eye_movements' 
-
-# PYTHONPATH=src python -m emp1 -sim 5 -k 0 -para_min 1450 -para_max 1450 -para_gap 20 -pm 0 -nsd 0.2 -n 1 -mode "d" -gamma 0.1 -psd 0.01 -radius 5 -s 1 -alpha 0.0 -dataset 'satimage'
+# PYTHONPATH=src python -m experiments -sim 0 -k 0 -para_min 50 -para_max 50 -para_gap 20 -pm 0 -nsd 1 -n 20 -mode "d" -gamma 0.02 -psd 10 -radius 10 -s 1 -alpha 12.0
