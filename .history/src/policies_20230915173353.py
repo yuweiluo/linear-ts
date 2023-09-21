@@ -260,14 +260,16 @@ class Roful(Policy):
         self.thinnesses.append(self.summary.thinness)
         self.lambda_max.append(lambda_max)
         self.lambda_min.append(lambda_min)
-
-        # self.errors.append(np.linalg.norm(self.param - self.summary.mean)**2)
+        self.lambda_max_over_min.append(lambda_max/lambda_min)
+        self.errors.append(np.linalg.norm(self.param - self.summary.mean)**2)
 
         self.worst_alpha.append(np.sqrt(lambda_min/lambda_max))
 
         # self.zeta.append(zeta)
         self.proj_first.append(
             theta_hat.T @ self.summary.xx @ theta_hat/lambda_max/npl.norm(theta_hat)**2)
+
+        self.approx_alpha.append(self.worth_func.alpha_approx)
 
         beta_TS = self.inflation(self.summary) * self.summary.radius_det()
 
@@ -278,7 +280,7 @@ class Roful(Policy):
         self.betas_TS.append(beta_TS)
         self.betas.append(self.beta)
 
-        # oracle_alpha = self.calculate_oracle_alpha(feedback)
+        oracle_alpha = self.calculate_oracle_alpha(feedback)
 
         self.outputs = (self.worth_func.alphas, self.worth_func.mus, self.worst_alpha, self.metrics.regrets, self.thinnesses, self.iota,
                         self.lambda_max, self.lambda_min,  self.proj_first,  self.betas, self.betas_TS, self.worth_func.discrete_alphas)

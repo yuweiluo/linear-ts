@@ -260,8 +260,8 @@ class Roful(Policy):
         self.thinnesses.append(self.summary.thinness)
         self.lambda_max.append(lambda_max)
         self.lambda_min.append(lambda_min)
-
-        # self.errors.append(np.linalg.norm(self.param - self.summary.mean)**2)
+        self.lambda_max_over_min.append(lambda_max/lambda_min)
+        self.errors.append(np.linalg.norm(self.param - self.summary.mean)**2)
 
         self.worst_alpha.append(np.sqrt(lambda_min/lambda_max))
 
